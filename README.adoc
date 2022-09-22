@@ -1,0 +1,7 @@
+# Seedwing Proxy
+
+The _Seedwing Proxy_ is a stateless proxy that sits between a build pipeline and any upstream repository contributing to the build.
+
+By applying a build-specific policy, the _Seedwing Proxy_ will allow or disallow access to the upstream artifacts based upon signatures in `Sigstore`, and possibly `In-Toto` in the future.
+
+image::docs/high-level.svg[]

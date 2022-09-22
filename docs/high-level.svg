@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="110.5 221.5 828.1797 419" width="828.1797" height="419">
+  <defs>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
+      <g>
+        <path d="M 8 0 L 0 -3 L 0 3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_2" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-9 -4 10 8" markerWidth="10" markerHeight="8" color="black">
+      <g>
+        <path d="M -8 0 L 0 3 L 0 -3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <g id="Canvas_1" stroke-dasharray="none" stroke="none" fill="none" stroke-opacity="1" fill-opacity="1">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_2">
+        <rect x="173" y="394" width="455" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(178 421.26794)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="161.748" y="16">seedwing-proxy</tspan>
+        </text>
+      </g>
+      <g id="Graphic_4">
+        <rect x="112" y="223" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(117 250.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="50.836" y="15">crates.io</tspan>
+        </text>
+      </g>
+      <g id="Graphic_5">
+        <rect x="314" y="223" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(319 250.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="41.772" y="15">npmjs.com</tspan>
+        </text>
+      </g>
+      <g id="Graphic_6">
+        <rect x="516" y="223" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(521 250.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="70.228" y="15">m2</tspan>
+        </text>
+      </g>
+      <g id="Graphic_7">
+        <rect x="711" y="394" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(716 421.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="53.204" y="15">sigstore</tspan>
+        </text>
+      </g>
+      <g id="Graphic_8">
+        <rect x="314" y="565" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(319 592.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="33.932" y="15">build pipeline</tspan>
+        </text>
+      </g>
+      <g id="Line_9">
+        <line x1="243.97953" y1="298.5" x2="347.46436" y2="386.1035" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_10">
+        <line x1="400.5" y1="298.5" x2="400.5" y2="382.6" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_11">
+        <line x1="557.0205" y1="298.5" x2="453.53564" y2="386.1035" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_12">
+        <line x1="400.5" y1="469.5" x2="400.5" y2="553.6" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_13">
+        <line x1="709.5" y1="431" x2="639.4" y2="431" marker-end="url(#FilledArrow_Marker)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_14">
+        <path d="M 895.4 431 L 938.1797 431 L 938.1797 602 L 488.5 602" marker-start="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>
