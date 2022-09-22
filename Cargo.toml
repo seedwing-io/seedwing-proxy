@@ -1,0 +1,13 @@
+[package]
+name = "seedwing-proxy"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4"
+crates_io_api = "0.8.1"
+awc = { version = "3.0.1", features = [ "rustls"] }
+sha256 = { version = "1.0.3" }
+sigstore = { version = "0.4.0" }
