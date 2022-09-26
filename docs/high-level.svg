@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="110.5 221.5 828.1797 419" width="828.1797" height="419">
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="-125.5 221.5 1064.1797 419" width="1064.1797" height="419">
   <defs>
     <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
       <g>
@@ -12,6 +12,11 @@
         <path d="M -8 0 L 0 3 L 0 -3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
       </g>
     </marker>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker_3" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 10 8" markerWidth="10" markerHeight="8" color="black">
+      <g>
+        <path d="M 8 0 L 0 -3 L 0 3 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
   </defs>
   <g id="Canvas_1" stroke-dasharray="none" stroke="none" fill="none" stroke-opacity="1" fill-opacity="1">
     <title>Canvas 1</title>
@@ -19,8 +24,9 @@
       <title>Layer 1</title>
       <g id="Graphic_2">
         <rect x="173" y="394" width="455" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
-        <text transform="translate(178 421.26794)" fill="black">
+        <text transform="translate(178 412.04395)" fill="black">
           <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="161.748" y="16">seedwing-proxy</tspan>
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="154.348" y="34.46411">policy enforcement</tspan>
         </text>
       </g>
       <g id="Graphic_4">
@@ -70,6 +76,27 @@
       </g>
       <g id="Line_14">
         <path d="M 895.4 431 L 938.1797 431 L 938.1797 602 L 488.5 602" marker-start="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_15">
+        <rect x="-124" y="347" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(-119 374.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="65.644" y="15">OPA</tspan>
+        </text>
+      </g>
+      <g id="Line_16">
+        <path d="M 161.6 431 L 111 431 L 111 384 L 50.5 384" marker-start="url(#FilledArrow_Marker_2)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Graphic_17">
+        <rect x="-124" y="441" width="173" height="74" stroke="gray" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+        <text transform="translate(-119 468.776)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" fill="black" x="57.94" y="15">in-toto</tspan>
+        </text>
+      </g>
+      <g id="Line_18">
+        <path d="M 50.5 478 L 111 478 L 111 431 L 171.5 431" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_19">
+        <path d="M 312.5 602 L -37.041193 602 L -37.041193 537.43466 L -37.5 529.9 L -37.5 526.4" marker-end="url(#FilledArrow_Marker_3)" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
     </g>
   </g>
