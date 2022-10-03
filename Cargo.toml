@@ -11,3 +11,9 @@ crates_io_api = "0.8.1"
 awc = { version = "3.0.1", features = [ "rustls"] }
 sha256 = { version = "1.0.3" }
 sigstore = { version = "0.4.0" }
+async-trait = "0.1.57"
+url = "2.1.0"
+opa-client = { path = "../opa-client"}
+serde = "1.0.145"
+toml = "0.5.9"
+indexmap = { version = "1.9.1", features = [ "serde"] }

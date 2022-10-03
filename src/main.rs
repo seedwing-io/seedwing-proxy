@@ -1,14 +1,23 @@
-use actix_web::{web, App, HttpServer};
-
-pub mod crates;
+pub mod config;
+pub mod errors;
+pub mod policy;
+pub mod proxy;
+pub mod repositories;
+pub mod sigstore;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    /*
     HttpServer::new(|| {
         App::new()
-            .service( web::scope("/crates").service(crates::service()))
+            .app_data(
+                web::Data::new(ProxyState::new())
+            )
+            .service(repositories::crates::service("crates") )
     })
-        .bind(("127.0.0.1", 8080))?
-        .run()
-        .await
+    .bind(("127.0.0.1", 8080))?
+    .run()
+    .await
+     */
+    Ok(())
 }

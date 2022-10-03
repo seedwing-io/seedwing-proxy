@@ -1,3 +1,4 @@
+use crate::repositories::crates::CratesState;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::{get, web, HttpResponse, Responder};
 use awc::http::header;
@@ -6,14 +7,13 @@ use sigstore::rekor::apis::{entries_api, index_api};
 use sigstore::rekor::models::SearchIndex;
 
 #[get("/{version}/download")]
-async fn download(path: web::Path<(String, String)>) -> impl Responder {
+async fn download(
+    path: web::Path<(String, String)>,
+    crates: web::Data<CratesState>,
+) -> impl Responder {
     let (crate_name, version) = path.into_inner();
 
-    let client = crates_io_api::AsyncClient::new(
-        "open3pl (bmcwhirt@redhat.com)",
-        std::time::Duration::from_millis(1000),
-    )
-    .unwrap();
+    let client = &crates.client;
 
     if let Ok(info) = client.get_crate(&*crate_name).await {
         if let Some(crate_version) = info.versions.iter().find(|e| e.num == version) {
