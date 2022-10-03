@@ -7,7 +7,7 @@ use url::Url;
 
 pub mod context;
 
-#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Decision {
     #[serde(rename = "allow")]
     Allow,

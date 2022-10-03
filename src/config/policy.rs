@@ -1,8 +1,8 @@
 use crate::policy::Decision;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PolicyConfig {
     #[serde(rename = "default", default)]
     default_decision: Decision,

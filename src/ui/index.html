@@ -1,9 +1,18 @@
 <html>
 <head>
   <title>Seedwing Proxy</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <h1>Seedwing Proxy</h1>
+
+<div>Running on {{config.proxy.bind}} port {{config.proxy.port}}</div>
+
+{{#each config.repositories}}
+<h2>{{@key}}</h2>
+<a href="{{this.url}}">{{this.url}}</a>
+{{/each}}
+
 
 </body>
 </html>

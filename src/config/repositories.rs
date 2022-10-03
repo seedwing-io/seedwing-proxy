@@ -1,9 +1,9 @@
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use url::Url;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Repositories(IndexMap<String, RepositoryConfig>);
 
 impl Repositories {
@@ -18,7 +18,7 @@ impl Default for Repositories {
     }
 }
 
-#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum RepositoryType {
     #[serde(rename = "crates")]
     Crates,
@@ -39,7 +39,7 @@ impl Display for RepositoryType {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RepositoryConfig {
     #[serde(rename = "type")]
     repository_type: RepositoryType,

@@ -5,7 +5,7 @@ pub(crate) mod repositories;
 use crate::config::policy::PolicyConfig;
 use crate::config::proxy::ProxyConfig;
 use crate::config::repositories::Repositories;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::io::Error as IoError;
 use std::io::Read;
 use toml::de::Error as TomlError;
@@ -28,7 +28,7 @@ impl From<IoError> for ConfigError {
     }
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     #[serde(default)]
     proxy: ProxyConfig,
