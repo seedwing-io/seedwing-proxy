@@ -22,8 +22,16 @@ impl ProxyConfig {
         self.bind.clone()
     }
 
+    pub(crate) fn bind_mut(&mut self) -> &mut String {
+        &mut self.bind
+    }
+
     pub fn port(&self) -> u16 {
         self.port
+    }
+
+    pub(crate) fn port_mut(&mut self) -> &mut u16 {
+        &mut self.port
     }
 }
 

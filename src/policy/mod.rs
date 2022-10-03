@@ -1,16 +1,24 @@
-use async_trait::async_trait;
+use opa_client::OpenPolicyAgentClient;
 
-use serde::Serialize;
+use crate::config::policy::PolicyConfig;
+use crate::policy::context::Context;
+use serde::{Deserialize, Serialize};
+use url::Url;
 
-pub mod opa;
+pub mod context;
 
-#[derive(Serialize)]
-pub struct Context {}
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Decision {
+    #[serde(rename = "allow")]
     Allow,
+    #[serde(rename = "deny")]
     Deny,
+}
+
+impl Default for Decision {
+    fn default() -> Self {
+        Self::Deny
+    }
 }
 
 pub struct ExplainedDecision {
@@ -18,35 +26,34 @@ pub struct ExplainedDecision {
     audit: String,
 }
 
-#[async_trait]
-pub trait Policy {
-    async fn evaluate(&self, context: &Context) -> Decision;
+#[derive(Deserialize)]
+struct Result {
+    // intentionally empty, we don't care the content.
 }
 
-pub struct Policies {
+#[derive(Clone)]
+pub struct PolicyEngine {
     default_decision: Decision,
-    policies: Vec<Box<dyn Policy>>,
+    opa: OpenPolicyAgentClient,
+    policy: String,
 }
 
-impl Policies {
-    pub fn new(default_decision: Decision) -> Self {
+impl PolicyEngine {
+    pub fn new(config: &PolicyConfig) -> Self {
         Self {
-            default_decision,
-            policies: Vec::new(),
+            default_decision: config.default_decision(),
+            opa: OpenPolicyAgentClient::new(config.url()),
+            policy: config.policy(),
         }
     }
 
     pub async fn evaluate(&self, context: &Context) -> Decision {
-        if self.policies.is_empty() {
-            return self.default_decision;
-        }
-
-        for policy in self.policies.iter() {
-            if let Decision::Deny = policy.evaluate(context).await {
-                return Decision::Deny;
+        if let Ok(result) = self.opa.query::<_, Result>(&self.policy, context).await {
+            if result.is_some() {
+                return Decision::Allow;
             }
         }
 
-        Decision::Allow
+        self.default_decision
     }
 }

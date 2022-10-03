@@ -10,6 +10,7 @@ use std::io::Error as IoError;
 use std::io::Read;
 use toml::de::Error as TomlError;
 
+#[derive(Debug)]
 pub enum ConfigError {
     Serialization(TomlError),
     Io(IoError),
@@ -37,14 +38,32 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new<R: Read>(mut input: R) -> Result<Self, ConfigError> {
+    pub fn new<R: Read>(
+        mut input: R,
+        bind_override: Option<String>,
+        port_override: Option<u16>,
+    ) -> Result<Self, ConfigError> {
         let mut vec = Vec::new();
         let len = input.read_to_end(&mut vec)?;
-        Ok(toml::from_slice(&vec[0..len])?)
+        let mut config: Config = toml::from_slice(&vec[0..len])?;
+
+        if let Some(bind) = bind_override {
+            *config.proxy_mut().bind_mut() = bind;
+        }
+
+        if let Some(port) = port_override {
+            *config.proxy_mut().port_mut() = port;
+        }
+
+        Ok(config)
     }
 
     pub fn proxy(&self) -> &ProxyConfig {
         &self.proxy
+    }
+
+    pub(crate) fn proxy_mut(&mut self) -> &mut ProxyConfig {
+        &mut self.proxy
     }
 
     pub fn policy(&self) -> &PolicyConfig {
@@ -60,6 +79,7 @@ impl Config {
 mod test {
     use super::*;
     use crate::config::repositories::RepositoryType;
+    use crate::policy::Decision;
     use url::Url;
 
     #[test]
@@ -90,17 +110,17 @@ mod test {
             config.policy.url()
         );
         assert_eq!("/example/basic/allow", config.policy.policy());
-        assert_eq!(true, config.policy.enforce());
+        assert_eq!(Decision::Deny, config.policy.default_decision());
     }
 
     #[test]
-    fn basic_config_non_enforce() {
+    fn basic_config_default_allow() {
         let config: Config = toml::from_str(
             r#"
             [policy]
             url = 'http://localhost:8080/'
             policy = '/example/basic/allow'
-            enforce = false
+            default = "allow"
         "#,
         )
         .unwrap();
@@ -112,7 +132,7 @@ mod test {
             config.policy.url()
         );
         assert_eq!("/example/basic/allow", config.policy.policy());
-        assert_eq!(false, config.policy.enforce());
+        assert_eq!(Decision::Allow, config.policy.default_decision());
     }
 
     #[test]
@@ -144,7 +164,7 @@ mod test {
             config.policy.url()
         );
         assert_eq!("/example/basic/allow", config.policy.policy());
-        assert_eq!(false, config.policy.enforce());
+        assert_eq!(Decision::Deny, config.policy.default_decision());
 
         let mut repo_iter = config.repositories.iter();
 

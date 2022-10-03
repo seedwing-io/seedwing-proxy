@@ -1,15 +1,20 @@
+use crate::policy::Decision;
 use serde::Deserialize;
 use url::Url;
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct PolicyConfig {
+    #[serde(rename = "default", default)]
+    default_decision: Decision,
     url: Url,
     policy: String,
-    #[serde(default = "default_enforce")]
-    enforce: bool,
 }
 
 impl PolicyConfig {
+    pub fn default_decision(&self) -> Decision {
+        self.default_decision
+    }
+
     pub fn url(&self) -> Url {
         self.url.clone()
     }
@@ -17,12 +22,4 @@ impl PolicyConfig {
     pub fn policy(&self) -> String {
         self.policy.clone()
     }
-
-    pub fn enforce(&self) -> bool {
-        self.enforce
-    }
-}
-
-fn default_enforce() -> bool {
-    true
 }

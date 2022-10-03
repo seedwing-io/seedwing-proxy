@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
 use serde::Deserialize;
+use std::fmt::{Display, Formatter};
 use url::Url;
 
 #[derive(Deserialize, Clone, Debug)]
@@ -23,6 +24,19 @@ pub enum RepositoryType {
     Crates,
     #[serde(rename = "m2")]
     M2,
+}
+
+impl Display for RepositoryType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RepositoryType::Crates => {
+                write!(f, "crates")
+            }
+            RepositoryType::M2 => {
+                write!(f, "m2")
+            }
+        }
+    }
 }
 
 #[derive(Deserialize, Clone, Debug)]
