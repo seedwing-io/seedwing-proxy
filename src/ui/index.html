@@ -1,18 +1,41 @@
 <html>
 <head>
   <title>Seedwing Proxy</title>
+  <meta charset="UTF-8">
+  <link
+      rel="stylesheet"
+      href="https://unpkg.com/@patternfly/patternfly/patternfly.css"
+      crossorigin="anonymous"
+  >
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<h1>Seedwing Proxy</h1>
 
-<div>Running on {{config.proxy.bind}} port {{config.proxy.port}}</div>
-
-{{#each config.repositories}}
-<h2>{{@key}}</h2>
-<a href="{{this.url}}">{{this.url}}</a>
-{{/each}}
-
+<div class="pf-c-page">
+  <header class="pf-c-page__header">
+    <div class="pf-c-page__header-brand">
+      <!--
+      <div class="pf-c-page__header-brand-toggle">toggle</div>
+      -->
+      <a href="#" class="pf-c-page__header-brand-link">Seedwing</a>
+    </div>
+    <!--
+    <div class="pf-c-page__header-tools">header-tools</div>
+    -->
+  </header>
+  <main class="pf-c-page__main" tabindex="-1">
+    <section class="pf-c-page__main-section pf-m-limit-width pf-m-align-center">
+      <div class="pf-c-page__main-body">
+        {{#each config.repositories}}
+        <div class="pf-c-card">
+          <h2>{{@key}}</h2>
+          <a href="{{this.url}}">{{this.url}}</a>
+        </div>
+        {{/each}}
+      </div>
+    </section>
+  </main>
+</div>
 
 </body>
 </html>
