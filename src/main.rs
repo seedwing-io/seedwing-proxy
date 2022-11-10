@@ -1,3 +1,5 @@
+use opa_client::http::OpenPolicyAgentHttpClient;
+
 use crate::cli::cli;
 use crate::config::Config;
 use crate::proxy::Proxy;
@@ -43,7 +45,7 @@ async fn main() -> std::io::Result<()> {
     if let Ok(config_toml) = File::open(config_toml.clone()) {
         match Config::new(config_toml, bind, port) {
             Ok(config) => {
-                let proxy = Proxy::new(config);
+                let proxy: Proxy<OpenPolicyAgentHttpClient> = Proxy::new(config);
                 proxy.run().await
             }
             Err(err) => {
