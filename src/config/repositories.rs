@@ -3,18 +3,12 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use url::Url;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct Repositories(IndexMap<String, RepositoryConfig>);
 
 impl Repositories {
     pub fn iter(&self) -> impl Iterator<Item = (&String, &RepositoryConfig)> {
         self.0.iter()
-    }
-}
-
-impl Default for Repositories {
-    fn default() -> Self {
-        Self(Default::default())
     }
 }
 

@@ -22,7 +22,9 @@ async fn download(
             let client = awc::Client::default();
             if let Ok(mut response) = client.get(format!("https://crates.io/{link}")).send().await {
                 if let Ok(payload) = response.body().limit(20_000_000).await {
-                    let digest = sha256::digest_bytes(&payload);
+                    let digest = sha256::digest(
+                        std::str::from_utf8(&payload).expect("could not parse Bytes"),
+                    );
 
                     let query = SearchIndex {
                         email: None,

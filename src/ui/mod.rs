@@ -1,7 +1,6 @@
 use crate::Config;
 use actix_web::dev::HttpServiceFactory;
-use actix_web::{get, web, App, HttpResponse, Responder};
-use awc::http::StatusCode;
+use actix_web::{get, web, HttpResponse, Responder};
 use handlebars::Handlebars;
 use serde_json::json;
 

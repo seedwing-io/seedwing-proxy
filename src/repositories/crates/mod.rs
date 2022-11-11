@@ -8,6 +8,12 @@ pub struct CratesState {
     client: AsyncClient,
 }
 
+impl Default for CratesState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CratesState {
     pub fn new() -> Self {
         let client = AsyncClient::new(

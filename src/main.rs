@@ -32,8 +32,7 @@ async fn main() -> std::io::Result<()> {
 
     let config_toml: PathBuf = matches.get_one("config").cloned().unwrap_or_else(|| {
         if let Ok(pwd) = std::env::current_dir() {
-            let config_toml = pwd.join(DEFAULT_CONFIG);
-            config_toml
+            pwd.join(DEFAULT_CONFIG)
         } else {
             PathBuf::new().join(DEFAULT_CONFIG)
         }

@@ -3,7 +3,6 @@ use opa_client::{Data, OpenPolicyAgentClient};
 use crate::config::policy::PolicyConfig;
 use crate::policy::context::Context;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use url::Url;
 
 pub mod context;
 
@@ -22,8 +21,8 @@ impl Default for Decision {
 }
 
 pub struct ExplainedDecision {
-    decision: Decision,
-    audit: String,
+    _decision: Decision,
+    _audit: String,
 }
 
 #[derive(Deserialize)]

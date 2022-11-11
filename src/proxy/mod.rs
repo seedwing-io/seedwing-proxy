@@ -10,13 +10,13 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct ProxyState<T: OpenPolicyAgentClient> {
-    policy: Arc<PolicyEngine<T>>,
+    _policy: Arc<PolicyEngine<T>>,
 }
 
 impl<T: OpenPolicyAgentClient> ProxyState<T> {
     pub fn new(policy: PolicyEngine<T>) -> Self {
         Self {
-            policy: Arc::new(policy),
+            _policy: Arc::new(policy),
         }
     }
 }
