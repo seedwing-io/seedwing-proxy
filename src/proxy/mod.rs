@@ -67,9 +67,7 @@ where
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {
                     RepositoryType::Crates => repositories::crates::service(scope),
-                    RepositoryType::M2 => {
-                        panic!("Maven m2 repositories not yet supported");
-                    }
+                    RepositoryType::M2 => repositories::maven::service(scope),
                 }
             }) {
                 app = app.service(service)

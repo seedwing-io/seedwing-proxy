@@ -1,5 +1,4 @@
-use actix_web::dev::HttpServiceFactory;
-use actix_web::web;
+use actix_web::{web, Scope};
 use crates_io_api::AsyncClient;
 
 pub mod api;
@@ -26,7 +25,7 @@ impl CratesState {
     }
 }
 
-pub fn service(scope: &str) -> impl HttpServiceFactory {
+pub fn service(scope: &str) -> Scope {
     web::scope(&format!("{scope}/api/v1"))
         .app_data(web::Data::new(CratesState::new()))
         .service(api::v1::service())

@@ -10,3 +10,7 @@ default = "allow"
 [repositories.crates-io]
 type = "crates"
 url = "https://crates.io/"
+
+[repositories.m2]
+type = "m2"
+url = "https://repo.maven.apache.org/maven2"
