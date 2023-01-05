@@ -11,6 +11,7 @@ async fn download(
     path: web::Path<(String, String)>,
     crates: web::Data<CratesState>,
 ) -> impl Responder {
+    log::info!("download {} {}", crate_name, version);
     let (crate_name, version) = path.into_inner();
 
     let client = &crates.client;

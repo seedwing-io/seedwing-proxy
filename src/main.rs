@@ -24,6 +24,7 @@ async fn main() -> std::io::Result<()> {
     Builder::new()
         .filter_level(LevelFilter::Warn)
         .filter_module("seedwing_proxy", LevelFilter::max())
+        .filter_module("actix_web", LevelFilter::Info)
         .init();
 
     let command = cli();

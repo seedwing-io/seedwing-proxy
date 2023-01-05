@@ -1,7 +1,46 @@
-# Seedwing Proxy
+= Seedwing Proxy
 
 The _Seedwing Proxy_ is a stateless proxy that sits between a build pipeline and any upstream repository contributing to the build.
 
 By applying a build-specific policy, the _Seedwing Proxy_ will allow or disallow access to the upstream artifacts based upon signatures in `Sigstore`, and possibly `In-Toto` in the future.
 
 image::docs/high-level.svg[]
+
+== Configuration
+
+Despite its name, this is not an web/http proxy in the conventional
+sense. It behaves as a local registry, _proxying_ requests for
+software artifacts to an actual repository and returning them only if
+they match a given policy.
+
+=== Cargo
+
+```
+[source.seedwing]
+registry = "http://localhost:8181/crates-io/"
+
+[source.crates-io]
+replace-with = "seedwing"
+
+```
+
+===  Maven
+
+```
+<settings>
+
+  <mirrors>
+    <mirror>
+      <id>seedwing</id>
+      <name>Seedwing "Proxy" Repository</name>
+      <url>http://0.0.0.0:8181/m2/</url>
+      <mirrorOf>central</mirrorOf> <!-- This is important -->
+    </mirror>
+  </mirrors>
+  ...
+</settings>
+
+```
+
+=== Cargo
+

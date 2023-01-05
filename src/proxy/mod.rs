@@ -4,6 +4,7 @@ use crate::config::repositories::RepositoryType;
 use crate::config::Config;
 use crate::policy::PolicyEngine;
 use crate::{repositories, ui};
+use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
 use std::marker::{PhantomData, Send, Sync};
 use std::sync::Arc;
@@ -60,7 +61,9 @@ where
         let proxy_state = ProxyState::new(policy_engine);
 
         let server = HttpServer::new(move || {
-            let mut app = App::new().app_data(web::Data::new(proxy_state.clone()));
+            let mut app = App::new()
+                .wrap(Logger::default())
+                .app_data(web::Data::new(proxy_state.clone()));
 
             app = app.service(ui::service(self.config.clone()));
 
