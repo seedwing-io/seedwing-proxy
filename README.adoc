@@ -8,12 +8,14 @@ image::docs/high-level.svg[]
 
 == Configuration
 
-Despite its name, this is not an web/http proxy in the conventional
+Despite its name, this is not a web/http proxy in the conventional
 sense. It behaves as a local registry, _proxying_ requests for
 software artifacts to an actual repository and returning them only if
 they match a given policy.
 
 === Cargo
+
+In `.cargo/config`:
 
 ```
 [source.seedwing]
@@ -25,6 +27,8 @@ replace-with = "seedwing"
 ```
 
 ===  Maven
+
+In `settings.xml`:
 
 ```
 <settings>
@@ -41,6 +45,3 @@ replace-with = "seedwing"
 </settings>
 
 ```
-
-=== Cargo
-
