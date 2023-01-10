@@ -9,6 +9,8 @@ use actix_web::{web, App, HttpServer};
 use std::marker::{PhantomData, Send, Sync};
 use std::sync::Arc;
 
+mod client;
+
 #[derive(Clone)]
 pub struct ProxyState<T: OpenPolicyAgentClient> {
     _policy: Arc<PolicyEngine<T>>,
@@ -63,6 +65,7 @@ where
         let server = HttpServer::new(move || {
             let mut app = App::new()
                 .wrap(Logger::default())
+                .default_service(web::route().to(client::proxy))
                 .app_data(web::Data::new(proxy_state.clone()));
 
             app = app.service(ui::service(self.config.clone()));
