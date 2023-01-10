@@ -1,16 +1,24 @@
-use actix_web::{HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{http::header, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 
 pub async fn proxy(req: HttpRequest) -> impl Responder {
+    log::debug!("incoming {:?}", req);
     let client = awc::Client::default();
-    let request = client.request_from(req.uri(), req.head());
+    let mut request = client.request_from(format!("https://crates.io{}", req.uri()), req.head());
+    request = request.insert_header((header::HOST, "crates.io"));
+    log::debug!("outgoing {:?}", request);
     match request.send().await {
         Ok(upstream) => {
             let mut response = HttpResponseBuilder::new(upstream.status());
             for header in upstream.headers().iter() {
                 response.insert_header(header);
             }
-            response.streaming(upstream)
+            let result = response.streaming(upstream);
+            log::debug!("returning {:?}", result);
+            result
         }
-        _ => HttpResponse::NotFound().body("not found"),
+        Err(e) => {
+            log::error!("proxy error: {}", e);
+            HttpResponse::NotFound().body("not found")
+        }
     }
 }
