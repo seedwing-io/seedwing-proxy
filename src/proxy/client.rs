@@ -1,24 +1,21 @@
-use actix_web::{
-    dev::PeerAddr, http::header, web, HttpRequest, HttpResponse, HttpResponseBuilder, Responder,
-};
+use actix_web::{web, HttpRequest, HttpResponse, HttpResponseBuilder, Responder};
 
-pub async fn proxy(
-    req: HttpRequest,
-    payload: web::Payload,
-    peer: Option<PeerAddr>,
-) -> impl Responder {
+pub async fn proxy(req: HttpRequest, payload: web::Payload) -> impl Responder {
     log::debug!("incoming {:?}", req);
     let client = awc::Client::default();
-    let mut request = client
-        .request_from(
-	    // TODO: un-hardcode
-            format!(
-                "https://github.com/rust-lang/crates.io-index{}",
-                req.uri().path().strip_prefix("/crates-io").unwrap()
-            ),
-            req.head(),
-        )
-        .no_decompress();
+    let request = client.request_from(
+        // TODO: un-hardcode
+        format!(
+            "https://github.com/rust-lang/crates.io-index{}",
+            req.uri()
+                .path_and_query()
+                .unwrap()
+                .as_str()
+                .strip_prefix("/crates-io")
+                .unwrap()
+        ),
+        req.head(),
+    );
     log::debug!("outgoing {:?}", request);
     match request.send_stream(payload).await {
         Ok(upstream) => {
