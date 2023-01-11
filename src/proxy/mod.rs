@@ -67,7 +67,7 @@ where
 
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {
-                    RepositoryType::Crates => repositories::crates::service(scope),
+                    RepositoryType::Crates => repositories::crates::service(scope, config.url()),
                     RepositoryType::M2 => repositories::maven::service(scope),
                 }
             }) {
