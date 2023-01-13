@@ -66,6 +66,7 @@ where
                 .app_data(web::Data::new(proxy_state.clone()));
 
             app = app.service(ui::service(self.config.clone()));
+            log::info!("Creating app");
 
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {
