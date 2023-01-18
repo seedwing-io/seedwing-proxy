@@ -65,9 +65,6 @@ where
                 .wrap(Logger::default())
                 .app_data(web::Data::new(proxy_state.clone()));
 
-            app = app.service(ui::service(self.config.clone()));
-            log::info!("Creating app");
-
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {
                     RepositoryType::Crates => repositories::crates::service(scope),
@@ -77,7 +74,7 @@ where
                 app = app.service(service)
             }
 
-            app
+            app.service(ui::service(self.config.clone()))
         });
 
         log::info!("seedwing at http://{}:{}/", bind_args.0, bind_args.1);
