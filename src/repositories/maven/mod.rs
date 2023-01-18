@@ -38,7 +38,7 @@ async fn proxy(
     payload: web::Payload,
     state: web::Data<MavenState>,
 ) -> impl Responder {
-    log::info!("incoming {:?}", req);
+    log::debug!("incoming {:?}", req);
     let uri = format!(
         "{}{}",
         state.url,
