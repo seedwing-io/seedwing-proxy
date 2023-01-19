@@ -93,7 +93,7 @@ pub fn modify_index() {
     //let mut file = std::fs::File::create(file_path)
     //    .expect("could not create config.json");
     
-    std::fs::write(path, "{\n\"dl\": \"http://localhost:8181/api/v1/crates\",\n\"api\": \"https://crates.io\"\n}")
+    std::fs::write(path, "{\n\t\"dl\": \"http://localhost:8181/api/v1/crates\",\n\t\"api\": \"http://localhost:8181\"\n}")
         .expect("could not write to config.json");
 
     log::info!("succeeded modifying index");
