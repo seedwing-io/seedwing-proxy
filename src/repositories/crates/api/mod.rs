@@ -6,7 +6,6 @@ pub mod v1;
 
 // Mostly copied from actix http-proxy example code
 
-//#[get("/other")]
 async fn forward(
     req: HttpRequest,
     payload: web::Payload,

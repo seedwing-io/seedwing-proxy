@@ -92,10 +92,7 @@ pub fn modify_index() {
 
     let path = path.join("crates.io-index/config.json");
     log::info!("file path: {:?}", path);
-
-    //let mut file = std::fs::File::create(file_path)
-    //    .expect("could not create config.json");
-    
+ 
     std::fs::write(path, "{\n\t\"dl\": \"http://localhost:8181/api/v1/crates\",\n\t\"api\": \"https://crates.io\"\n}")
         .expect("could not write to config.json");
 
@@ -106,8 +103,6 @@ pub fn service() -> impl HttpServiceFactory {
     log::info!("inside crates service");
 
     modify_index();
-
-    //web::resource(scope).to(forward)
 
     web::scope("/crates/{crate_name}").service(download)
 }

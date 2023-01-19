@@ -5,7 +5,7 @@ use crate::config::Config;
 use crate::policy::PolicyEngine;
 use crate::{repositories, ui};
 use actix_web::middleware::Logger;
-use actix_web::{get, web, App, HttpServer, Responder, HttpResponse, ResponseError};
+use actix_web::{get, web, App, HttpServer, Responder, HttpRequest, HttpResponse, ResponseError};
 use std::marker::{PhantomData, Send, Sync};
 use std::sync::Arc;
 
@@ -25,36 +25,6 @@ impl<T: OpenPolicyAgentClient> ProxyState<T> {
         }
     }
 }
-
-#[derive(Debug)]
-pub struct MyError(String); // <-- needs debug and display
-
-impl std::fmt::Display for MyError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "A validation error occured on the input.")
-    }
-}
-
-impl ResponseError for MyError {} // <-- key
-
-/*#[get("/")]
-async fn index() -> impl Responder {
-    log::info!("in the index!");
-    HttpResponse::Ok()
-}*/
-
-//pub fn index_service() -> impl HttpServiceFactory {
-//    log::info!("in the main service");
-//
-//    web::scope("").service(index)
-//}
-
-
-/*async fn other() -> impl actix_web::Responder {
-    log::info!("in other");
-
-    actix_web::HttpResponse::Ok()
-}*/
 
 pub struct Proxy<T: OpenPolicyAgentClient> {
     config: Config,
@@ -101,7 +71,11 @@ where
 
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {
-                    RepositoryType::Crates => repositories::crates::service(scope, config.url()),
+                    RepositoryType::Crates => repositories::crates::service(scope, config.url()), // this
+                                                                                                  // sends
+                                                                                                  // to
+                                                                                                  // proxy
+                                                                                                  // service
                     RepositoryType::M2 => repositories::maven::service(scope),
                 }
             }) {
@@ -109,13 +83,30 @@ where
             }
 
             app.service(ui::service(self.config.clone()))
-                .default_service(web::to(|| HttpResponse::Gone()))
-                //.default_service(web::resource("").route(web::get().to(index)))
-                //.service(web::resource("/").to(index))
-                //.service(web::scope("/")).route("/", web::get().to(other))
-        });
+                //.default_service(web::to(repositories::crates::service(scope, config.url())))
+                .default_service(web::to( | req: HttpRequest | async move {
+                                    log::info!("i am handling the request: {:?}\n", req);
+                                    
+                                    let req_path = req.uri().path();
+                                    log::info!("req path is {:?}\n", req_path);
 
-        // can we add a service later?
+                                    let mut extended_path = String::new();
+                                    extended_path += "https://crates.io";
+                                    extended_path += req_path;
+
+                                    log::info!("new path is {:?}\n", extended_path);
+
+                                    let body = reqwest::get(extended_path)
+                                        .await.expect("request failed")
+                                        .text()
+                                        .await.expect("getting response text failed");
+
+                                    //log::info!("body = {:?}", body);
+
+                                    HttpResponse::Ok()
+                                    }
+                                         ))
+        });
 
         log::info!("seedwing at http://{}:{}/", bind_args.0, bind_args.1);
         log::info!("========================================================================");
