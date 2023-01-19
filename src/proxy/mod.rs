@@ -5,9 +5,13 @@ use crate::config::Config;
 use crate::policy::PolicyEngine;
 use crate::{repositories, ui};
 use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
+use actix_web::{get, web, App, HttpServer, Responder, HttpResponse, ResponseError};
 use std::marker::{PhantomData, Send, Sync};
 use std::sync::Arc;
+
+use actix_web::dev::HttpServiceFactory;
+
+//use actix_web::{get, web, App, HttpServer, Responder};
 
 #[derive(Clone)]
 pub struct ProxyState<T: OpenPolicyAgentClient> {
@@ -21,6 +25,36 @@ impl<T: OpenPolicyAgentClient> ProxyState<T> {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct MyError(String); // <-- needs debug and display
+
+impl std::fmt::Display for MyError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "A validation error occured on the input.")
+    }
+}
+
+impl ResponseError for MyError {} // <-- key
+
+/*#[get("/")]
+async fn index() -> impl Responder {
+    log::info!("in the index!");
+    HttpResponse::Ok()
+}*/
+
+//pub fn index_service() -> impl HttpServiceFactory {
+//    log::info!("in the main service");
+//
+//    web::scope("").service(index)
+//}
+
+
+/*async fn other() -> impl actix_web::Responder {
+    log::info!("in other");
+
+    actix_web::HttpResponse::Ok()
+}*/
 
 pub struct Proxy<T: OpenPolicyAgentClient> {
     config: Config,
@@ -75,7 +109,13 @@ where
             }
 
             app.service(ui::service(self.config.clone()))
+                .default_service(web::to(|| HttpResponse::Gone()))
+                //.default_service(web::resource("").route(web::get().to(index)))
+                //.service(web::resource("/").to(index))
+                //.service(web::scope("/")).route("/", web::get().to(other))
         });
+
+        // can we add a service later?
 
         log::info!("seedwing at http://{}:{}/", bind_args.0, bind_args.1);
         log::info!("========================================================================");

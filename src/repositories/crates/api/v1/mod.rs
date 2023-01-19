@@ -6,6 +6,9 @@ use sigstore::rekor::apis::configuration::Configuration;
 use sigstore::rekor::apis::{entries_api, index_api};
 use sigstore::rekor::models::SearchIndex;
 
+use crate::repositories::crates::api::forward;
+use crate::repositories::crates::web::scope;
+
 use std::io::prelude::*;
 
 #[get("/{version}/download")]
@@ -23,7 +26,7 @@ async fn download(
             let link = &crate_version.dl_path;
 
             let client = awc::Client::default();
-            if let Ok(mut response) = client.get(format!("https://crates.io/{link}")).send().await {
+            if let Ok(mut response) = client.get(format!("https://github.com/rust-lang/crates.io-index/{link}")).send().await {
                 if let Ok(payload) = response.body().limit(20_000_000).await {
                     let digest = sha256::digest(
                         std::str::from_utf8(&payload).expect("could not parse Bytes"),
@@ -93,7 +96,7 @@ pub fn modify_index() {
     //let mut file = std::fs::File::create(file_path)
     //    .expect("could not create config.json");
     
-    std::fs::write(path, "{\n\t\"dl\": \"http://localhost:8181/api/v1/crates\",\n\t\"api\": \"http://localhost:8181\"\n}")
+    std::fs::write(path, "{\n\t\"dl\": \"http://localhost:8181/api/v1/crates\",\n\t\"api\": \"https://crates.io\"\n}")
         .expect("could not write to config.json");
 
     log::info!("succeeded modifying index");
@@ -103,6 +106,8 @@ pub fn service() -> impl HttpServiceFactory {
     log::info!("inside crates service");
 
     modify_index();
+
+    //web::resource(scope).to(forward)
 
     web::scope("/crates/{crate_name}").service(download)
 }

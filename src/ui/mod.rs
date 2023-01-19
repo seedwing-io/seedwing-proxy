@@ -12,6 +12,8 @@ const INDEX: &str = include_str!("index.html");
 
 #[get("/")]
 async fn index(config: web::Data<UiState>) -> impl Responder {
+    log::info!("in the ui index\n\n");
+
     let index = Handlebars::new();
 
     let result = index.render_template(

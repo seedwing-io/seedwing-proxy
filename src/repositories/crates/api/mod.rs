@@ -1,11 +1,12 @@
 use crate::repositories::crates::CratesState;
 use actix_web::dev::{HttpServiceFactory,PeerAddr};
-use actix_web::{error, web, Error, HttpRequest, HttpResponse};
+use actix_web::{get, error, web, Error, HttpRequest, HttpResponse};
 
 pub mod v1;
 
 // Mostly copied from actix http-proxy example code
 
+//#[get("/other")]
 async fn forward(
     req: HttpRequest,
     payload: web::Payload,
@@ -55,6 +56,6 @@ async fn forward(
 }
 
 pub fn proxy_service(scope: &str) -> impl HttpServiceFactory {
-    log::info!("{scope}");
+    log::info!("scope is: {scope}");
     web::resource(scope).to(forward)
 }

@@ -32,7 +32,7 @@ impl CratesState {
     }
 }
 
-pub fn service(scope: &str, url: Url) -> Scope {
+pub fn service(scope: &str, url: Url/*, crate_name: &str, crate_version: &str*/) -> Scope {
     let scope = format!("/{scope}");
     log::info!("Creating cargo service with scope {scope} and url {url}");
     web::scope(&scope)
@@ -40,4 +40,6 @@ pub fn service(scope: &str, url: Url) -> Scope {
         .service(web::scope("/api/v1").service(api::v1::service()))
         .service(api::proxy_service("/info/refs"))
         .service(api::proxy_service("/git-upload-pack"))
+        //.default_service(api::proxy_service("/other"))
+        //.service(api::proxy_service("/api/v1/crates/{}/{}/download", crate_name, crate_version))
 }
