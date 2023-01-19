@@ -79,6 +79,6 @@ where
 
         log::info!("seedwing at http://{}:{}/", bind_args.0, bind_args.1);
         log::info!("========================================================================");
-        server.bind(bind_args)?.run().await
+        server.workers(1).bind(bind_args)?.run().await
     }
 }

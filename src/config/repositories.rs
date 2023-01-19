@@ -38,6 +38,7 @@ pub struct RepositoryConfig {
     #[serde(rename = "type")]
     repository_type: RepositoryType,
     url: Url,
+    default: bool
 }
 
 impl RepositoryConfig {
@@ -47,5 +48,9 @@ impl RepositoryConfig {
 
     pub fn url(&self) -> Url {
         self.url.clone()
+    }
+
+    pub fn default(&self) -> bool {
+        self.default
     }
 }

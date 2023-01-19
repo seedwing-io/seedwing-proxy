@@ -9,9 +9,10 @@ default = "allow"
 
 [repositories.crates-io]
 type = "crates"
-#url = "https://crates.io/"
 url = "https://github.com/rust-lang/crates.io-index"
+default = true
 
 [repositories.m2]
 type = "m2"
 url = "https://repo.maven.apache.org/maven2"
+default = false

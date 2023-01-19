@@ -6,6 +6,8 @@ use sigstore::rekor::apis::configuration::Configuration;
 use sigstore::rekor::apis::{entries_api, index_api};
 use sigstore::rekor::models::SearchIndex;
 
+use std::io::prelude::*;
+
 #[get("/{version}/download")]
 async fn download(
     path: web::Path<(String, String)>,
@@ -68,6 +70,39 @@ async fn download(
     HttpResponse::NotFound().body("not found")
 }
 
+pub fn modify_index() {
+    log::info!("inside modify index");
+
+    // set up modded git index; potentially better with git2 library;
+    // download every time to get fresh version?
+    let output = std::process::Command::new("git")
+        .arg("clone")
+        .arg("https://github.com/rust-lang/crates.io-index.git")
+        .output()
+        .expect("unable to clone crates io index");
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    log::info!("manifest dir: {:?}", manifest_dir);
+
+    let path = std::path::PathBuf::from(manifest_dir);
+    log::info!("path: {:?}", path);
+
+    let path = path.join("crates.io-index/config.json");
+    log::info!("file path: {:?}", path);
+
+    //let mut file = std::fs::File::create(file_path)
+    //    .expect("could not create config.json");
+    
+    std::fs::write(path, "{\n\"dl\": \"http://localhost:8181/api/v1/crates\",\n\"api\": \"https://crates.io\"\n}")
+        .expect("could not write to config.json");
+
+    log::info!("succeeded modifying index");
+}
+
 pub fn service() -> impl HttpServiceFactory {
+    log::info!("inside crates service");
+
+    modify_index();
+
     web::scope("/crates/{crate_name}").service(download)
 }
