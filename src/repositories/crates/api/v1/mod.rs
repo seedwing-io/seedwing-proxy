@@ -21,9 +21,7 @@ async fn download(
             let client = awc::Client::default();
             if let Ok(mut upstream) = client.get(format!("https://crates.io/{link}")).send().await {
                 if let Ok(payload) = upstream.body().limit(20_000_000).await {
-                    let digest = sha256::digest(
-                        std::str::from_utf8(&payload).expect("could not parse Bytes"),
-                    );
+                    let digest = sha256::digest(payload.as_ref());
                     let uuids = search(digest.clone()).await;
                     println!("{crate_name} {version} = {digest} {:?}", uuids);
 

@@ -26,7 +26,6 @@ impl MavenState {
 }
 
 pub fn service(scope: &str, url: Url) -> Scope {
-    log::info!("scope: {}", scope);
     web::scope(scope)
         .app_data(web::Data::new(MavenState::new(url, scope)))
         .service(proxy)
