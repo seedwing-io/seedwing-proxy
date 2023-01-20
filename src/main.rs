@@ -3,8 +3,6 @@ use opa_client::http::OpenPolicyAgentHttpClient;
 use crate::cli::cli;
 use crate::config::Config;
 use crate::proxy::Proxy;
-use env_logger::Builder;
-use log::LevelFilter;
 use std::fs::File;
 use std::path::PathBuf;
 
@@ -21,11 +19,7 @@ pub const DEFAULT_CONFIG: &str = "seedwing.toml";
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    Builder::new()
-        .filter_level(LevelFilter::Warn)
-        .filter_module("seedwing_proxy", LevelFilter::max())
-        .filter_module("actix_web", LevelFilter::Info)
-        .init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let command = cli();
 

@@ -37,7 +37,7 @@ In `settings.xml`:
     <mirror>
       <id>seedwing</id>
       <name>Seedwing "Proxy" Repository</name>
-      <url>http://0.0.0.0:8181/m2/</url>
+      <url>http://0.0.0.0:8181/m2</url>
       <mirrorOf>central</mirrorOf> <!-- This is important -->
     </mirror>
   </mirrors>
