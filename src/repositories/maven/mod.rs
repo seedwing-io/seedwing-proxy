@@ -23,6 +23,9 @@ impl MavenState {
         let scope = scope.to_string();
         Self { client, url, scope }
     }
+    // Strips the scope out of the path, leaving the query in
+    // tact. Now deprecated in favor of extracting GAV path segments
+    // in the proxy handler
     pub fn upstream_uri(&self, req: &HttpRequest) -> String {
         format!(
             "{}{}",
@@ -43,10 +46,19 @@ pub fn service(scope: &str, url: Url) -> Scope {
         .service(proxy)
 }
 
-#[route("{tail:.*}", method = "GET", method = "HEAD")]
-async fn proxy(req: HttpRequest, state: web::Data<MavenState>) -> impl Responder {
-    log::debug!("incoming {:?}", req);
-    let uri = state.upstream_uri(&req);
+#[route(
+    "{group:.*}/{artifact}/{version}/{file}",
+    method = "GET",
+    method = "HEAD"
+)]
+async fn proxy(
+    req: HttpRequest,
+    state: web::Data<MavenState>,
+    path: web::Path<(String, String, String, String)>,
+) -> impl Responder {
+    let (group, artifact, version, file) = path.into_inner();
+    let uri = format!("{}/{}/{}/{}/{}", state.url, group, artifact, version, file);
+    log::debug!("upstream -> {uri}");
     let request = state.client.request_from(uri, req.head());
     match request.send().await {
         Ok(upstream) => {
