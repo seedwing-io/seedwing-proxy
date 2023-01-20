@@ -1,4 +1,7 @@
-use actix_web::{route, web, HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Scope};
+use crate::sigstore::search;
+use actix_web::{
+    route, web, Error, HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Scope,
+};
 use awc::Client;
 use url::Url;
 
@@ -61,17 +64,26 @@ async fn proxy(
     log::debug!("upstream -> {uri}");
     let request = state.client.request_from(&uri, req.head());
     match request.send().await {
-        Ok(upstream) => {
-            let mut response = HttpResponseBuilder::new(upstream.status());
-            for header in upstream.headers().iter() {
-                response.insert_header(header);
+        Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
+            Ok(payload) => {
+                let digest = sha256::digest(payload.as_ref());
+                let uuids = search(digest.clone()).await;
+                log::debug!(
+                    "{group}/{artifact}/{version}/{file}\ndigest: {digest}\n UUIDs: {:?}",
+                    uuids
+                );
+                let mut response = HttpResponseBuilder::new(upstream.status());
+                for header in upstream.headers().iter() {
+                    response.insert_header(header);
+                }
+                response.body(payload)
             }
-            response.streaming(upstream)
-        }
+            Err(e) => Error::from(e).into(),
+        },
         Err(e) => {
             let msg = format!("Error encountered proxying {uri} -> {e}");
             log::error!("{msg}");
-            HttpResponse::NotFound().body(msg)
+            HttpResponse::InternalServerError().body(msg)
         }
     }
 }
