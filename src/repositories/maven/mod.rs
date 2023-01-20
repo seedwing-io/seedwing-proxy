@@ -59,7 +59,7 @@ async fn proxy(
     let (group, artifact, version, file) = path.into_inner();
     let uri = format!("{}/{}/{}/{}/{}", state.url, group, artifact, version, file);
     log::debug!("upstream -> {uri}");
-    let request = state.client.request_from(uri, req.head());
+    let request = state.client.request_from(&uri, req.head());
     match request.send().await {
         Ok(upstream) => {
             let mut response = HttpResponseBuilder::new(upstream.status());
@@ -69,8 +69,9 @@ async fn proxy(
             response.streaming(upstream)
         }
         Err(e) => {
-            log::error!("proxy error: {}", e);
-            HttpResponse::NotFound().body("not found")
+            let msg = format!("Error encountered proxying {uri} -> {e}");
+            log::error!("{msg}");
+            HttpResponse::NotFound().body(msg)
         }
     }
 }
