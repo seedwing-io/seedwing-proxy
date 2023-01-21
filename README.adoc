@@ -45,3 +45,20 @@ In `settings.xml`:
 </settings>
 
 ```
+
+To see it work, you can sign a few jars from Maven Central using Sigstore's `cosign` tool like so:
+
+```
+  $ curl -o foo.jar https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.8.0/maven-compiler-plugin-3.8.0.jar
+  $ COSIGN_EXPERIMENTAL=1 cosign sign-blob foo.jar
+
+```
+
+That'll output an index which you can then view here: https://rekor.tlog.dev/?logIndex=11656166
+
+The `spec/data/hash/value` should match the output of this:
+
+```
+  $ sha256sum foo.jar | cut -d' ' -f 1
+
+```
