@@ -1,47 +1,37 @@
-use opa_client::OpenPolicyAgentClient;
-
 use crate::config::repositories::RepositoryType;
 use crate::config::Config;
 use crate::policy::PolicyEngine;
 use crate::{repositories, ui};
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
-use std::marker::{PhantomData, Send, Sync};
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct ProxyState<T: OpenPolicyAgentClient> {
-    _policy: Arc<PolicyEngine<T>>,
+pub struct ProxyState {
+    _policy: Arc<PolicyEngine>,
 }
 
-impl<T: OpenPolicyAgentClient> ProxyState<T> {
-    pub fn new(policy: PolicyEngine<T>) -> Self {
+impl ProxyState {
+    pub fn new(policy: PolicyEngine) -> Self {
         Self {
             _policy: Arc::new(policy),
         }
     }
 }
 
-pub struct Proxy<T: OpenPolicyAgentClient> {
+pub struct Proxy {
     config: Config,
-    phantom: PhantomData<T>,
 }
 
-impl<T: 'static> Proxy<T>
-where
-    T: OpenPolicyAgentClient + Clone + Send + Sync,
-{
+impl Proxy {
     pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            phantom: PhantomData,
-        }
+        Self { config }
     }
 
     pub async fn run(self) -> Result<(), std::io::Error> {
         let bind_args: (String, u16) = self.config.proxy().into();
 
-        let policy_engine: PolicyEngine<T> = PolicyEngine::new(self.config.policy());
+        let policy_engine: PolicyEngine = PolicyEngine::new(self.config.policy());
 
         log::info!("========================================================================");
         log::info!("OPA server {}", self.config.policy().url());

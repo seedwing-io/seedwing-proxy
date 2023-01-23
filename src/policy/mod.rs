@@ -1,8 +1,6 @@
-use opa_client::{Data, OpenPolicyAgentClient};
-
 use crate::config::policy::PolicyConfig;
 use crate::policy::context::Context;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub mod context;
 
@@ -31,37 +29,18 @@ struct Result {
 }
 
 #[derive(Clone)]
-pub struct PolicyEngine<T: OpenPolicyAgentClient> {
+pub struct PolicyEngine {
     default_decision: Decision,
-    opa: T,
-    policy: String,
 }
 
-impl<T: OpenPolicyAgentClient> PolicyEngine<T>
-where
-    T: OpenPolicyAgentClient,
-{
+impl PolicyEngine {
     pub fn new(config: &PolicyConfig) -> Self {
         Self {
             default_decision: config.default_decision(),
-            opa: <T>::new(config.url().to_string().as_bytes()).unwrap(),
-            policy: config.policy(),
         }
     }
 
-    pub async fn evaluate<O: DeserializeOwned>(&mut self, context: &Context) -> Decision {
-        let dummy = Data { data: b"abcd" };
-
-        if let Ok(result) = self
-            .opa
-            .query::<_, _, O>(&self.policy, context, &dummy)
-            .await
-        {
-            if result.is_some() {
-                return Decision::Allow;
-            }
-        }
-
+    pub async fn evaluate(&mut self, _context: &Context) -> Decision {
         self.default_decision
     }
 }
