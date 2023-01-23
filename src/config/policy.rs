@@ -7,7 +7,6 @@ pub struct PolicyConfig {
     #[serde(rename = "default", default)]
     default_decision: Decision,
     url: Url,
-    policy: String,
 }
 
 impl PolicyConfig {
@@ -17,9 +16,5 @@ impl PolicyConfig {
 
     pub fn url(&self) -> Url {
         self.url.clone()
-    }
-
-    pub fn policy(&self) -> String {
-        self.policy.clone()
     }
 }
