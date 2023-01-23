@@ -34,8 +34,7 @@ impl Proxy {
         let policy_engine: PolicyEngine = PolicyEngine::new(self.config.policy());
 
         log::info!("========================================================================");
-        log::info!("OPA server {}", self.config.policy().url());
-        log::info!("    policy {}", self.config.policy().policy());
+        log::info!("Policy server {}", self.config.policy().url());
         log::info!("------------------------------------------------------------------------");
 
         for (scope, config) in self.config.repositories().iter() {

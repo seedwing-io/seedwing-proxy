@@ -4,7 +4,6 @@ port = 8181
 
 [policy]
 url = 'http://localhost:8080/'
-policy = '/example/basic/allow'
 default = "allow"
 
 [repositories.crates-io]

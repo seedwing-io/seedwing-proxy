@@ -98,7 +98,6 @@ mod test {
             r#"
             [policy]
             url = 'http://localhost:8080/'
-            policy = '/example/basic/allow'
         "#,
         )
         .unwrap();
@@ -109,7 +108,6 @@ mod test {
             Url::parse("http://localhost:8080/").unwrap(),
             config.policy.url()
         );
-        assert_eq!("/example/basic/allow", config.policy.policy());
         assert_eq!(Decision::Deny, config.policy.default_decision());
     }
 
@@ -119,7 +117,6 @@ mod test {
             r#"
             [policy]
             url = 'http://localhost:8080/'
-            policy = '/example/basic/allow'
             default = "allow"
         "#,
         )
@@ -131,7 +128,6 @@ mod test {
             Url::parse("http://localhost:8080/").unwrap(),
             config.policy.url()
         );
-        assert_eq!("/example/basic/allow", config.policy.policy());
         assert_eq!(Decision::Allow, config.policy.default_decision());
     }
 
@@ -145,7 +141,6 @@ mod test {
 
             [policy]
             url = 'http://localhost:8080/'
-            policy = '/example/basic/allow'
             enforce = false
 
             [repositories.crates-io]
@@ -163,7 +158,6 @@ mod test {
             Url::parse("http://localhost:8080/").unwrap(),
             config.policy.url()
         );
-        assert_eq!("/example/basic/allow", config.policy.policy());
         assert_eq!(Decision::Deny, config.policy.default_decision());
 
         let mut repo_iter = config.repositories.iter();
