@@ -1,13 +1,30 @@
 use serde::Serialize;
-use url::Url;
 
 #[derive(Serialize)]
 pub struct Context {
-    original_url: Url,
+    url: String,
     hash: String,
     id: ArtifactIdentifier,
     license: Option<String>,
     repository_id: String,
+}
+
+impl Context {
+    pub fn new(
+        url: String,
+        hash: String,
+        id: ArtifactIdentifier,
+        repository_id: String,
+    ) -> Context {
+        let license = None; // TODO: something
+        Context {
+            url,
+            hash,
+            id,
+            license,
+            repository_id,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -29,7 +46,7 @@ mod test {
     #[test]
     fn basic_context_serialization() {
         let context = Context {
-            original_url: Url::parse("http://crates.io/not/a/real/crate.crate").unwrap(),
+            url: "http://crates.io/not/a/real/crate.crate".into(),
             hash: "8675309".into(),
             id: ArtifactIdentifier::Crate {
                 name: "rust_crate".into(),

@@ -1,4 +1,7 @@
-use crate::sigstore::search;
+use crate::policy::{
+    context::{ArtifactIdentifier, Context},
+    Decision, PolicyEngine,
+};
 use actix_web::{
     route, web, Error, HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Scope,
 };
@@ -57,6 +60,7 @@ pub fn service(scope: &str, url: Url) -> Scope {
 async fn proxy(
     req: HttpRequest,
     state: web::Data<MavenState>,
+    policy: web::Data<PolicyEngine>,
     path: web::Path<(String, String, String, String)>,
 ) -> impl Responder {
     let (group, artifact, version, file) = path.into_inner();
@@ -66,17 +70,25 @@ async fn proxy(
     match request.send().await {
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {
-                let digest = sha256::digest(payload.as_ref());
-                let uuids = search(digest.clone()).await;
-                log::debug!(
-                    "{group}/{artifact}/{version}/{file}\ndigest: {digest}\n UUIDs: {:?}",
-                    uuids
+                let context = Context::new(
+                    uri,
+                    sha256::digest(payload.as_ref()),
+                    ArtifactIdentifier::M2 {
+                        group_id: group,
+                        artifact_id: artifact,
+                    },
+                    state.scope.to_owned(),
                 );
-                let mut response = HttpResponseBuilder::new(upstream.status());
-                for header in upstream.headers().iter() {
-                    response.insert_header(header);
+                match policy.evaluate(&context).await {
+                    Decision::Allow => {
+                        let mut response = HttpResponseBuilder::new(upstream.status());
+                        for header in upstream.headers().iter() {
+                            response.insert_header(header);
+                        }
+                        response.body(payload)
+                    }
+                    Decision::Deny => HttpResponse::Forbidden().body("Denied by policy"),
                 }
-                response.body(payload)
             }
             Err(e) => Error::from(e).into(),
         },
