@@ -29,7 +29,7 @@ impl PolicyEngine {
     }
 
     pub async fn evaluate(&self, context: &Context) -> Decision {
-        let client = awc::Client::default();
+        let client = awc::Client::default(); // TODO: better place for this?
         match client
             .post(self.config.url().as_str())
             .send_json(context)
@@ -39,6 +39,11 @@ impl PolicyEngine {
                 if response.status().is_success() {
                     Decision::Allow
                 } else {
+                    log::error!(
+                        "Deny! {} context => {}",
+                        response.status(),
+                        serde_json::to_string(context).unwrap()
+                    );
                     Decision::Deny
                 }
             }

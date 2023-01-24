@@ -1,0 +1,5 @@
+
+pattern m2 = {
+  url: string,
+  hash: string
+}
