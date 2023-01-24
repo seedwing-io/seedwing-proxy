@@ -8,13 +8,13 @@ use actix_web::{
 use awc::Client;
 use url::Url;
 
-pub struct MavenState {
+pub struct MavenConfig {
     client: Client,
     url: Url,
     scope: String,
 }
 
-impl Default for MavenState {
+impl Default for MavenConfig {
     fn default() -> Self {
         Self::new(
             "https://repo.maven.apache.org/maven2".try_into().unwrap(),
@@ -23,32 +23,17 @@ impl Default for MavenState {
     }
 }
 
-impl MavenState {
+impl MavenConfig {
     pub fn new(url: Url, scope: &str) -> Self {
         let client = Client::default();
         let scope = scope.to_string();
         Self { client, url, scope }
     }
-    // Strips the scope out of the path, leaving the query in
-    // tact. Now deprecated in favor of extracting GAV path segments
-    // in the proxy handler
-    pub fn upstream_uri(&self, req: &HttpRequest) -> String {
-        format!(
-            "{}{}",
-            self.url,
-            req.uri()
-                .path_and_query()
-                .unwrap()
-                .as_str()
-                .strip_prefix(&format!("/{}", self.scope))
-                .unwrap()
-        )
-    }
 }
 
 pub fn service(scope: &str, url: Url) -> Scope {
     web::scope(scope)
-        .app_data(web::Data::new(MavenState::new(url, scope)))
+        .app_data(web::Data::new(MavenConfig::new(url, scope)))
         .service(proxy)
 }
 
@@ -59,14 +44,14 @@ pub fn service(scope: &str, url: Url) -> Scope {
 )]
 async fn proxy(
     req: HttpRequest,
-    state: web::Data<MavenState>,
+    config: web::Data<MavenConfig>,
     policy: web::Data<PolicyEngine>,
     path: web::Path<(String, String, String, String)>,
 ) -> impl Responder {
     let (group, artifact, version, file) = path.into_inner();
-    let uri = format!("{}/{}/{}/{}/{}", state.url, group, artifact, version, file);
+    let uri = format!("{}/{}/{}/{}/{}", config.url, group, artifact, version, file);
     log::debug!("upstream -> {uri}");
-    let request = state.client.request_from(&uri, req.head());
+    let request = config.client.request_from(&uri, req.head());
     match request.send().await {
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {
@@ -77,7 +62,7 @@ async fn proxy(
                         group_id: group,
                         artifact_id: artifact,
                     },
-                    state.scope.to_owned(),
+                    config.scope.to_owned(),
                 );
                 match policy.evaluate(&context).await {
                     Decision::Allow => {
