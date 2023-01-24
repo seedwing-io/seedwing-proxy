@@ -4,20 +4,6 @@ use crate::policy::PolicyEngine;
 use crate::{repositories, ui};
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
-use std::sync::Arc;
-
-#[derive(Clone)]
-pub struct ProxyState {
-    _policy: Arc<PolicyEngine>,
-}
-
-impl ProxyState {
-    pub fn new(policy: PolicyEngine) -> Self {
-        Self {
-            _policy: Arc::new(policy),
-        }
-    }
-}
 
 pub struct Proxy {
     config: Config,
@@ -31,7 +17,7 @@ impl Proxy {
     pub async fn run(self) -> Result<(), std::io::Error> {
         let bind_args: (String, u16) = self.config.proxy().into();
 
-        let policy_engine: PolicyEngine = PolicyEngine::new(self.config.policy());
+        let policy_engine: PolicyEngine = PolicyEngine::new(self.config.policy().clone());
 
         log::info!("========================================================================");
         log::info!("Policy server {}", self.config.policy().url());
@@ -47,12 +33,10 @@ impl Proxy {
         }
         log::info!("------------------------------------------------------------------------");
 
-        let proxy_state = ProxyState::new(policy_engine);
-
         let server = HttpServer::new(move || {
             let mut app = App::new()
                 .wrap(Logger::default())
-                .app_data(web::Data::new(proxy_state.clone()));
+                .app_data(web::Data::new(policy_engine.clone()));
 
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {

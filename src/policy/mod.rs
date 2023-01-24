@@ -18,29 +18,31 @@ impl Default for Decision {
     }
 }
 
-pub struct ExplainedDecision {
-    _decision: Decision,
-    _audit: String,
-}
-
-#[derive(Deserialize)]
-struct Result {
-    // intentionally empty, we don't care the content.
-}
-
 #[derive(Clone)]
 pub struct PolicyEngine {
-    default_decision: Decision,
+    config: PolicyConfig,
 }
 
 impl PolicyEngine {
-    pub fn new(config: &PolicyConfig) -> Self {
-        Self {
-            default_decision: config.default_decision(),
-        }
+    pub fn new(config: PolicyConfig) -> Self {
+        Self { config }
     }
 
-    pub async fn evaluate(&mut self, _context: &Context) -> Decision {
-        self.default_decision
+    pub async fn evaluate(&self, context: &Context) -> Decision {
+        let client = awc::Client::default();
+        match client
+            .post(self.config.url().as_str())
+            .send_json(context)
+            .await
+        {
+            Ok(response) => {
+                if response.status().is_success() {
+                    Decision::Allow
+                } else {
+                    Decision::Deny
+                }
+            }
+            Err(_) => self.config.default_decision(),
+        }
     }
 }
