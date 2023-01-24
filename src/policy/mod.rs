@@ -39,7 +39,7 @@ impl PolicyEngine {
                 if response.status().is_success() {
                     Decision::Allow
                 } else {
-                    log::error!(
+                    log::warn!(
                         "Deny! {} context => {}",
                         response.status(),
                         serde_json::to_string(context).unwrap()
