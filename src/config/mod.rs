@@ -138,6 +138,8 @@ mod test {
             [proxy]
             bind = "0.0.0.0"
             port = 8181
+            cache_dir = '~/.seedwing_proxy/cache'
+            git_cmd = "git"
 
             [policy]
             url = 'http://localhost:8080/'

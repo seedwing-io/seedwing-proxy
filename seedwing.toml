@@ -8,7 +8,7 @@ default = "deny"
 
 [repositories.crates-io]
 type = "crates"
-url = "https://crates.io/"
+url = "https://github.com/rust-lang/crates.io-index"
 
 [repositories.m2]
 type = "m2"
