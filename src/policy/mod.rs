@@ -1,5 +1,6 @@
 use crate::config::policy::PolicyConfig;
 use crate::policy::context::Context;
+use actix_web::error::{ErrorInternalServerError, ErrorNotAcceptable};
 use serde::{Deserialize, Serialize};
 
 pub mod context;
@@ -28,26 +29,31 @@ impl PolicyEngine {
         Self { config }
     }
 
-    pub async fn evaluate(&self, context: &Context) -> Decision {
+    pub async fn evaluate(&self, context: &Context) -> Result<(), actix_web::Error> {
         let client = awc::Client::default(); // TODO: better place for this?
         match client
             .post(self.config.url().as_str())
             .send_json(context)
             .await
         {
-            Ok(response) => {
+            Ok(mut response) => {
                 if response.status().is_success() {
-                    Decision::Allow
+                    Ok(())
                 } else {
+                    let reason =
+                        String::from_utf8(response.body().await.unwrap().to_vec()).unwrap();
                     log::warn!(
-                        "Deny! {} context => {}",
+                        "Access Denied!\n status: {}\n reason: {}",
                         response.status(),
-                        serde_json::to_string(context).unwrap()
+                        reason,
                     );
-                    Decision::Deny
+                    Err(ErrorNotAcceptable(reason).into())
                 }
             }
-            Err(_) => self.config.default_decision(),
+            Err(e) => match self.config.default_decision() {
+                Decision::Allow => Ok(()),
+                Decision::Deny => Err(ErrorInternalServerError(e)),
+            },
         }
     }
 }

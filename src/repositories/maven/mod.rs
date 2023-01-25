@@ -1,6 +1,6 @@
 use crate::policy::{
     context::{ArtifactIdentifier, Context},
-    Decision, PolicyEngine,
+    PolicyEngine,
 };
 use actix_web::{
     route, web, Error, HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Scope,
@@ -65,14 +65,14 @@ async fn proxy(
                     config.scope.to_owned(),
                 );
                 match policy.evaluate(&context).await {
-                    Decision::Allow => {
+                    Ok(_) => {
                         let mut response = HttpResponseBuilder::new(upstream.status());
                         for header in upstream.headers().iter() {
                             response.insert_header(header);
                         }
                         response.body(payload)
                     }
-                    Decision::Deny => HttpResponse::Forbidden().body("Denied by policy"),
+                    Err(e) => e.into(),
                 }
             }
             Err(e) => Error::from(e).into(),

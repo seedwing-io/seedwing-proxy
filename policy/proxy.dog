@@ -1,5 +1,33 @@
 
-pattern context = {
+pattern context = minimum
+
+pattern jim = minimum && signed-by-jim
+
+pattern minimum = {
   url: string,
   hash: string
+}
+
+pattern signed-by-jim = {
+    hash: sigstore::SHA256(
+        list::Any<{
+            apiVersion: "0.0.1",
+            spec: {
+                signature: {
+                    publicKey: {
+                        content: base64::Base64(
+                            x509::PEM( list::Any<{
+                                version: 2,
+                                extensions: list::Any<{
+                                    subjectAlternativeName: list::Any<{
+                                        rfc822: "jim@crossleys.org",
+                                    }>
+                                }>
+                            }> )
+                        )
+                    }
+                }
+            }
+        }>
+    )
 }
