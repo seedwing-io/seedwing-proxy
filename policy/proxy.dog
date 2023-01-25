@@ -1,5 +1,5 @@
 
-pattern m2 = {
+pattern context = {
   url: string,
   hash: string
 }
