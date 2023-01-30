@@ -4,23 +4,42 @@
  We will fetch a remote repository, rebuilding the git repository with one modification to the index config.json file to use our "dl" and "api" links
 */
 
-use std::{path::{Path, PathBuf}, fs::{File, self}, io::{self, Write, ErrorKind}, fmt::{Display, Formatter}, process::Stdio};
+use std::{
+    fmt::{Display, Formatter},
+    fs::{self, File},
+    io::{self, ErrorKind, Write},
+    path::{Path, PathBuf},
+    process::Stdio,
+};
 
-use actix_web::{web, dev::HttpServiceFactory, HttpRequest, HttpResponse, http::StatusCode, body::BodyStream, HttpMessage};
+use actix_web::{
+    body::BodyStream, dev::HttpServiceFactory, http::StatusCode, web, HttpMessage, HttpRequest,
+    HttpResponse,
+};
 use bytes::Bytes;
 use fs2::FileExt;
-use git2::{Repository, Direction, Oid, FetchOptions, RemoteCallbacks, Signature, MergeOptions, Remote, build::CheckoutBuilder};
+use git2::{
+    build::CheckoutBuilder, Direction, FetchOptions, MergeOptions, Oid, Remote, RemoteCallbacks,
+    Repository, Signature,
+};
 use substring::Substring;
 use thiserror::Error;
-use tokio::{io::{AsyncWriteExt as _, AsyncReadExt}, {process::{ChildStdout, Command}, sync::mpsc}, {time}};
-use tokio_stream::{StreamExt, wrappers::ReceiverStream};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt as _},
+    time,
+    {
+        process::{ChildStdout, Command},
+        sync::mpsc,
+    },
+};
+use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use url::Url;
 
 use super::CratesState;
 
 const CACHEDIR_TAG_FILE: &str = "CACHEDIR.TAG";
 const CACHEDIR_TAG_CONTENTS: &str = "Signature: 8a477f597d28d172789f06886806bc55
-# This is a seedwing_proxy cache directory for a remote cargo registry." ;
+# This is a seedwing_proxy cache directory for a remote cargo registry.";
 
 const REMOTE_NAME: &str = "repository";
 const GIT_DIR: &str = "repository";
@@ -49,7 +68,7 @@ pub enum GitError {
     },
     Other {
         message: String,
-    }
+    },
 }
 
 impl Display for GitError {
@@ -63,16 +82,16 @@ pub struct IndexRepository {
     repo: Url,
     local_repository_cache: PathBuf,
     dl: Url,
-    api: Url
+    api: Url,
 }
 
 impl IndexRepository {
     pub fn new(repo: Url, local_repository_cache: PathBuf, dl: Url, api: Url) -> IndexRepository {
-        IndexRepository{
-            repo: repo.clone(),
-            local_repository_cache: local_repository_cache,
-            dl: dl,
-            api: api,
+        IndexRepository {
+            repo,
+            local_repository_cache,
+            dl,
+            api,
         }
     }
 
@@ -93,28 +112,44 @@ impl IndexRepository {
     }
 
     fn write_config(&self, config_json_file: &Path) -> io::Result<()> {
-        fs::write(&config_json_file, format!("{{\n  \"dl\": \"{}\",\n  \"api\": \"{}\"\n}}\n", self.get_dl_url(), self.get_api_url()))
+        fs::write(
+            config_json_file,
+            format!(
+                "{{\n  \"dl\": \"{}\",\n  \"api\": \"{}\"\n}}\n",
+                self.get_dl_url(),
+                self.get_api_url()
+            ),
+        )
     }
 
     fn get_seedwing_branch(seedwing_branch_file: &PathBuf) -> Result<String, GitError> {
         if let Ok(remote_branch_vec) = fs::read(seedwing_branch_file) {
             if let Ok(remote_branch) = String::from_utf8(remote_branch_vec) {
-                return Ok(remote_branch);
+                Ok(remote_branch)
             } else {
-                return Err(GitError::Other {message: String::from("Remote branch name is not valid UTF-8")});
+                Err(GitError::Other {
+                    message: String::from("Remote branch name is not valid UTF-8"),
+                })
             }
         } else {
-            return Err(GitError::Other {message: String::from("Failed to read remote branch name from seedwing configuration")});
+            Err(GitError::Other {
+                message: String::from(
+                    "Failed to read remote branch name from seedwing configuration",
+                ),
+            })
         }
-
     }
 
-    fn get_branch_short_name(remote_branch: &String) -> &str {
+    fn get_branch_short_name(remote_branch: &str) -> &str {
         remote_branch.trim_start_matches("refs/heads/")
     }
 
-    fn get_remote_branch_spec(remote_branch: &String) -> String {
-        format!("refs/remotes/{}/{}", REMOTE_NAME, Self::get_branch_short_name(&remote_branch))
+    fn get_remote_branch_spec(remote_branch: &str) -> String {
+        format!(
+            "refs/remotes/{}/{}",
+            REMOTE_NAME,
+            Self::get_branch_short_name(remote_branch)
+        )
     }
 
     fn fetch_repo(remote: &mut Remote, remote_branch: &String) -> Result<(), GitError> {
@@ -122,16 +157,19 @@ impl IndexRepository {
 
         let mut cb = RemoteCallbacks::new();
         cb.sideband_progress(|data| {
-            print!("[sideband]: {}", String::from_utf8(Vec::from(data)).unwrap());
+            print!(
+                "[sideband]: {}",
+                String::from_utf8(Vec::from(data)).unwrap()
+            );
             io::stdout().flush().unwrap();
             true
         });
 
         cb.update_tips(|refname, a, b| {
             if a.is_zero() {
-                println!("[update new]     {} {}", b, refname);
+                println!("[update new]     {b} {refname}");
             } else {
-                println!("[update updated] {}..{} {}", a, b, refname);
+                println!("[update updated] {a}..{b} {refname}");
             }
             true
         });
@@ -158,10 +196,15 @@ impl IndexRepository {
         fo.remote_callbacks(cb);
 
         remote.fetch(&[&remote_branch], Some(&mut fo), None)?;
-        return Ok(());
+        Ok(())
     }
 
-    pub fn init_local_branch(&self, repo: &Repository, remote_branch: &String, git_repository_dir: &PathBuf) -> Result<(), GitError> {
+    pub fn init_local_branch(
+        &self,
+        repo: &Repository,
+        remote_branch: &String,
+        git_repository_dir: &Path,
+    ) -> Result<(), GitError> {
         let seedwing_branch_file = git_repository_dir.join(SEEDWING_BRANCH_FILE);
         let gitignore_file = git_repository_dir.join(GITIGNORE_FILE);
         let config_json_file = git_repository_dir.join(CONFIG_JSON_FILE);
@@ -171,19 +214,27 @@ impl IndexRepository {
         let remote_branch_spec = Self::get_remote_branch_spec(remote_branch);
         let branch_name = Self::get_branch_short_name(remote_branch);
         if let Some(upstream_commit) = repo.revparse_single(&remote_branch_spec)?.as_commit() {
-            repo.branch(&branch_name, &upstream_commit, true)?;
+            repo.branch(branch_name, upstream_commit, true)?;
             log::info!("Tagging {}", &upstream_commit.id());
-            repo.tag(TAG_NAME, upstream_commit.as_object(), &sig, "Latest merge", true)?;
+            repo.tag(
+                TAG_NAME,
+                upstream_commit.as_object(),
+                &sig,
+                "Latest merge",
+                true,
+            )?;
         } else {
-            return Err(GitError::Other {message: format!("Could not locate commit for {}", &remote_branch_spec)});
+            return Err(GitError::Other {
+                message: format!("Could not locate commit for {}", &remote_branch_spec),
+            });
         }
         log::info!("Checking out head");
         repo.checkout_head(None)?;
 
         log::info!("Initialising seedwing configuration");
 
-        fs::write(&gitignore_file, format!("/{}", SEEDWING_BRANCH_FILE))?;
-        fs::create_dir_all(&seedwing_branch_file.parent().unwrap())?;
+        fs::write(gitignore_file, format!("/{SEEDWING_BRANCH_FILE}"))?;
+        fs::create_dir_all(seedwing_branch_file.parent().unwrap())?;
         fs::write(&seedwing_branch_file, remote_branch)?;
 
         self.write_config(&config_json_file)?;
@@ -199,7 +250,14 @@ impl IndexRepository {
         let head_id = repo.head()?.target().unwrap();
         let head_commit = repo.find_commit(head_id)?;
 
-        repo.commit(Some("HEAD"), &sig, &sig, "Committing Initial config.json", &tree, &[&head_commit])?;
+        repo.commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            "Committing Initial config.json",
+            &tree,
+            &[&head_commit],
+        )?;
         repo.checkout_head(None)?;
         Ok(())
     }
@@ -210,8 +268,8 @@ impl IndexRepository {
         let git_repository_dir = cache_dir.join(GIT_DIR);
         let seedwing_branch_file = git_repository_dir.join(SEEDWING_BRANCH_FILE);
 
-        let cache_dir_tag_file = File::open(&cache_dir_tag)?;
-        if let Err(_) = cache_dir_tag_file.try_lock_exclusive() {
+        let cache_dir_tag_file = File::open(cache_dir_tag)?;
+        if cache_dir_tag_file.try_lock_exclusive().is_err() {
             log::info!("Lock file currently held, waiting for lock");
             cache_dir_tag_file.lock_exclusive()?;
         }
@@ -223,14 +281,18 @@ impl IndexRepository {
         let remote_branch = Self::get_seedwing_branch(&seedwing_branch_file)?;
         Self::fetch_repo(&mut remote, &remote_branch)?;
 
-        let tag_spec = format!("refs/tags/{}", TAG_NAME);
+        let tag_spec = format!("refs/tags/{TAG_NAME}");
         let tagged_id = match repo.revparse_single(&tag_spec) {
             Ok(obj) => obj.as_tag().unwrap().target()?.id(),
-            Err(_) => Oid::zero()
+            Err(_) => Oid::zero(),
         };
 
         let remote_branch_spec = Self::get_remote_branch_spec(&remote_branch);
-        let remote_id = repo.revparse_single(&remote_branch_spec)?.as_commit().unwrap().id();
+        let remote_id = repo
+            .revparse_single(&remote_branch_spec)?
+            .as_commit()
+            .unwrap()
+            .id();
 
         if tagged_id != remote_id {
             let sig = Signature::now("Seedwing", "seedwing@example.com")?;
@@ -249,15 +311,30 @@ impl IndexRepository {
             if index.has_conflicts() {
                 index.remove_all([CONFIG_JSON_FILE].iter(), None)?;
                 if index.has_conflicts() {
-                    return Err(GitError::Other {message: String::from("Could not resolve all conflicts")});
+                    return Err(GitError::Other {
+                        message: String::from("Could not resolve all conflicts"),
+                    });
                 }
             }
             let id = index.write_tree_to(&repo)?;
             let tree = repo.find_tree(id)?;
-            repo.commit(Some("HEAD"), &sig, &sig, "Merge commit for remote repository", &tree, &[&head_commit, &remote_commit])?;
+            repo.commit(
+                Some("HEAD"),
+                &sig,
+                &sig,
+                "Merge commit for remote repository",
+                &tree,
+                &[&head_commit, &remote_commit],
+            )?;
 
             log::info!("Tagging {}", &remote_id);
-            repo.tag(TAG_NAME, remote_commit.as_object(), &sig, "Latest merge", true)?;
+            repo.tag(
+                TAG_NAME,
+                remote_commit.as_object(),
+                &sig,
+                "Latest merge",
+                true,
+            )?;
 
             let mut cb = CheckoutBuilder::new();
             let cb = cb.force();
@@ -292,7 +369,7 @@ impl IndexRepository {
             let mut cache_dir_tag_file;
             if !cache_dir_tag.exists() {
                 cache_dir_tag_file = File::create(&cache_dir_tag)?;
-                writeln!(&mut cache_dir_tag_file, "{}", CACHEDIR_TAG_CONTENTS)?;
+                writeln!(&mut cache_dir_tag_file, "{CACHEDIR_TAG_CONTENTS}")?;
             } else {
                 cache_dir_tag_file = File::open(&cache_dir_tag)?;
             }
@@ -332,7 +409,9 @@ impl IndexRepository {
 
                     self.init_local_branch(&repo, &remote_branch, &git_repository_dir)?;
                 } else {
-                    return Err(GitError::Other {message: String::from("Remote branch name is not valid UTF-8")});
+                    return Err(GitError::Other {
+                        message: String::from("Remote branch name is not valid UTF-8"),
+                    });
                 }
             }
         }
@@ -351,19 +430,20 @@ async fn read_line(child: &mut ChildStdout) -> Result<String, io::Error> {
         match child.read_u8().await {
             Ok(byte) => {
                 if byte == 13 { // '\r'
-                    // ignore
-                } else if byte == 10 { // '\n'
+                     // ignore
+                } else if byte == 10 {
+                    // '\n'
                     break;
                 } else {
                     vec.push(byte);
                 }
             }
-            Err(error) => return Err(error)
+            Err(error) => return Err(error),
         }
     }
     match String::from_utf8(vec) {
         Ok(result) => Ok(result),
-        Err(error) => Err(io::Error::new(ErrorKind::Other, error))
+        Err(error) => Err(io::Error::new(ErrorKind::Other, error)),
     }
 }
 
@@ -372,7 +452,10 @@ async fn handle_backend_service(
     mut payload: web::Payload,
     crates: web::Data<CratesState>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let git_dir = crates.index_repository.get_local_repository_cache().join(GIT_DIR);
+    let git_dir = crates
+        .index_repository
+        .get_local_repository_cache()
+        .join(GIT_DIR);
     let git_dir = git_dir.to_str().unwrap();
 
     let req_path = req.uri().path();
@@ -410,15 +493,15 @@ async fn handle_backend_service(
     loop {
         let read_line = read_line(&mut stdout).await;
         match read_line {
-                Ok(line) => {
-                if line.len() == 0 {
+            Ok(line) => {
+                if line.is_empty() {
                     break;
-                } else if let Some(index) = line.find(":") {
+                } else if let Some(index) = line.find(':') {
                     let header_name = line.substring(0, index);
-                    let header_value = line.substring(index+1, line.len());
+                    let header_value = line.substring(index + 1, line.len());
                     resp.insert_header((header_name, header_value));
                 }
-            },
+            }
             Err(_) => break,
         }
     }
@@ -426,10 +509,10 @@ async fn handle_backend_service(
     let (tx, rx) = mpsc::channel::<Result<Bytes, io::Error>>(100);
 
     actix_web::rt::spawn(async move {
-        let mut buf: [u8; 8192] = [0;8192];
+        let mut buf: [u8; 8192] = [0; 8192];
         while let Ok(count) = stdout.read(&mut buf).await {
             if count > 0 {
-                if let Err(_) = tx.send(Ok(Bytes::from(buf[0..count].to_vec()))).await {
+                if (tx.send(Ok(Bytes::from(buf[0..count].to_vec()))).await).is_err() {
                     break;
                 }
             } else {

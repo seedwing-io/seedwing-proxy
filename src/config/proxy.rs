@@ -54,10 +54,13 @@ impl ProxyConfig {
         let mut cache_dir = self.cache_dir.trim();
         let mut tilde = false;
         cache_dir = match cache_dir.strip_prefix("~/") {
-            Some(cache_dir) => { tilde = true ; cache_dir},
-            None => cache_dir
+            Some(cache_dir) => {
+                tilde = true;
+                cache_dir
+            }
+            None => cache_dir,
         };
-        while let Some(stripped) = cache_dir.strip_suffix("/") {
+        while let Some(stripped) = cache_dir.strip_suffix('/') {
             cache_dir = stripped
         }
         if tilde {

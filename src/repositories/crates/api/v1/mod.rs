@@ -14,7 +14,7 @@ async fn download(
 
     let client = &crates.client;
 
-    if let Ok(info) = client.get_crate(&*crate_name).await {
+    if let Ok(info) = client.get_crate(&crate_name).await {
         if let Some(crate_version) = info.versions.iter().find(|e| e.num == version) {
             let link = &crate_version.dl_path;
 
@@ -23,7 +23,7 @@ async fn download(
                 if let Ok(payload) = upstream.body().limit(20_000_000).await {
                     let digest = sha256::digest(payload.as_ref());
                     let uuids = search(digest.clone()).await;
-                    println!("{crate_name} {version} = {digest} {:?}", uuids);
+                    println!("{crate_name} {version} = {digest} {uuids:?}");
 
                     let mut response = HttpResponse::Ok();
                     if let Some(v) = upstream.headers().get(header::CONTENT_TYPE) {

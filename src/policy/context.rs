@@ -57,6 +57,6 @@ mod test {
 
         let json = serde_json::to_string(&context).unwrap();
 
-        println!("{}", json);
+        println!("{json}");
     }
 }

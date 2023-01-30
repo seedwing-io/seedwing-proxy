@@ -24,7 +24,12 @@ impl CratesState {
 
         let scope = String::from(scope);
         let git_cmd = String::from(git_cmd);
-        Self { client, scope, index_repository, git_cmd}
+        Self {
+            client,
+            scope,
+            index_repository,
+            git_cmd,
+        }
     }
 }
 
@@ -32,7 +37,11 @@ pub fn service(scope: &str, git_cmd: &str, index_repository: git::IndexRepositor
     let scope = format!("/{scope}");
     log::info!("Creating cargo service with scope {scope}");
     web::scope(&scope)
-        .app_data(web::Data::new(CratesState::new(&scope, &git_cmd, index_repository)))
+        .app_data(web::Data::new(CratesState::new(
+            &scope,
+            git_cmd,
+            index_repository,
+        )))
         .service(web::scope("/api/v1").service(api::v1::service()))
         .service(git::git_backend_service("/info/refs"))
         .service(git::git_backend_service("/git-upload-pack"))

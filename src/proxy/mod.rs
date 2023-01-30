@@ -7,9 +7,9 @@ use crate::policy::PolicyEngine;
 use crate::repositories::crates::git::IndexRepository;
 use crate::{repositories, ui};
 use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer, HttpResponse};
+use actix_web::{web, App, HttpResponse, HttpServer};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct Proxy {
     config: Config,
@@ -25,7 +25,7 @@ impl Proxy {
     }
 
     pub async fn run(mut self) -> Result<(), std::io::Error> {
-        let bind_args: (String, u16,) = self.config.proxy().into();
+        let bind_args: (String, u16) = self.config.proxy().into();
 
         let policy_engine: PolicyEngine = PolicyEngine::new(self.config.policy().clone());
 
@@ -46,22 +46,41 @@ impl Proxy {
 
         for (scope, config) in self.config.repositories().iter() {
             if RepositoryType::Crates == config.repository_type() {
-                log::info!("------------------------------------------------------------------------");
+                log::info!(
+                    "------------------------------------------------------------------------"
+                );
                 log::info!("Initialising Crate Repository for scope {scope}");
-                let index_repository = git::IndexRepository::new(config.url().clone(),
+                let index_repository = git::IndexRepository::new(
+                    config.url().clone(),
                     self.get_cache_dir(&base_cache_dir, scope, &bind_args.0, bind_args.1),
                     self.get_url(scope, &bind_args.0, bind_args.1, Some("/api/v1/crates")),
-                    self.get_url(scope, &bind_args.0, bind_args.1, None));
-                log::info!("    Crate repository       : {}", index_repository.get_repo());
-                log::info!("    local repository cache : {}", index_repository.get_local_repository_cache().display());
-                log::info!("    download URL           : {}", index_repository.get_dl_url());
-                log::info!("    API URL                : {}", index_repository.get_api_url());
+                    self.get_url(scope, &bind_args.0, bind_args.1, None),
+                );
+                log::info!(
+                    "    Crate repository       : {}",
+                    index_repository.get_repo()
+                );
+                log::info!(
+                    "    local repository cache : {}",
+                    index_repository.get_local_repository_cache().display()
+                );
+                log::info!(
+                    "    download URL           : {}",
+                    index_repository.get_dl_url()
+                );
+                log::info!(
+                    "    API URL                : {}",
+                    index_repository.get_api_url()
+                );
                 if let Err(error) = index_repository.prepare_local_cache() {
                     log::info!("    Failed to initialize   : {error}");
                 } else {
-                    self.crate_repositories.insert(scope.to_string(), index_repository);
+                    self.crate_repositories
+                        .insert(scope.to_string(), index_repository);
                 }
-                log::info!("------------------------------------------------------------------------");
+                log::info!(
+                    "------------------------------------------------------------------------"
+                );
             }
         }
 
@@ -75,13 +94,14 @@ impl Proxy {
                     RepositoryType::Crates => {
                         if let Some(index_repository) = self.crate_repositories.get(scope) {
                             let git_cmd = &self.config.proxy().git_cmd();
-                            repositories::crates::service(scope,  git_cmd, index_repository.clone())
+                            repositories::crates::service(scope, git_cmd, index_repository.clone())
                         } else {
-                            log::info!("Ignoring scope {scope} because of earlier initialisation failures");
-                            web::scope(&scope)
-                                .default_service(web::to(|| HttpResponse::NotFound()))
+                            log::info!(
+                                "Ignoring scope {scope} because of earlier initialisation failures"
+                            );
+                            web::scope(scope).default_service(web::to(HttpResponse::NotFound))
                         }
-                    },
+                    }
                     RepositoryType::M2 => repositories::maven::service(scope, config.url()),
                 }
             }) {
@@ -96,20 +116,27 @@ impl Proxy {
         server.bind(bind_args)?.run().await
     }
 
-    fn get_cache_dir(&self, base_cache_dir: &PathBuf, name: &String, addr: &String, port: u16) -> PathBuf {
-        PathBuf::from(format!("{}/{}_{}_{}", base_cache_dir.display(), name, addr, port))
+    fn get_cache_dir(
+        &self,
+        base_cache_dir: &Path,
+        name: &String,
+        addr: &String,
+        port: u16,
+    ) -> PathBuf {
+        PathBuf::from(format!(
+            "{}/{}_{}_{}",
+            base_cache_dir.display(),
+            name,
+            addr,
+            port
+        ))
     }
 
     fn get_url(&self, name: &String, addr: &String, port: u16, path: Option<&str>) -> Url {
-        let addr = if "0.0.0.0" == addr {
-            "127.0.0.1"
-        } else {
-            addr
-        } ;
+        let addr = if "0.0.0.0" == addr { "127.0.0.1" } else { addr };
         match path {
-            Some(path) => Url::parse(&format!("http://{}:{}/{}{}", addr, port, name, path)).unwrap(),
-            None => Url::parse(&format!("http://{}:{}/{}", addr, port, name)).unwrap()
+            Some(path) => Url::parse(&format!("http://{addr}:{port}/{name}{path}")).unwrap(),
+            None => Url::parse(&format!("http://{addr}:{port}/{name}")).unwrap(),
         }
     }
-
 }

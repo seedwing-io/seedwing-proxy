@@ -41,7 +41,7 @@ async fn main() -> std::io::Result<()> {
                 proxy.run().await
             }
             Err(err) => {
-                eprintln!("Unable to read the configuration file {:?}", err);
+                eprintln!("Unable to read the configuration file {err:?}");
                 std::process::exit(-1);
             }
         }

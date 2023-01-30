@@ -102,7 +102,7 @@ mod test {
         )
         .unwrap();
 
-        println!("{:?}", config);
+        println!("{config:?}");
 
         assert_eq!(
             Url::parse("http://localhost:8080/").unwrap(),
@@ -122,7 +122,7 @@ mod test {
         )
         .unwrap();
 
-        println!("{:?}", config);
+        println!("{config:?}");
 
         assert_eq!(
             Url::parse("http://localhost:8080/").unwrap(),
