@@ -5,11 +5,9 @@ use crate::policy::{
 use actix_web::{
     route, web, Error, HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Scope,
 };
-use awc::Client;
 use url::Url;
 
 pub struct MavenConfig {
-    client: Client,
     url: Url,
     scope: String,
 }
@@ -25,9 +23,8 @@ impl Default for MavenConfig {
 
 impl MavenConfig {
     pub fn new(url: Url, scope: &str) -> Self {
-        let client = Client::default();
         let scope = scope.to_string();
-        Self { client, url, scope }
+        Self { url, scope }
     }
 }
 
@@ -51,7 +48,7 @@ async fn proxy(
     let (group, artifact, version, file) = path.into_inner();
     let uri = format!("{}/{}/{}/{}/{}", config.url, group, artifact, version, file);
     log::debug!("upstream -> {uri}");
-    let request = config.client.request_from(&uri, req.head());
+    let request = policy.client.request_from(&uri, req.head());
     match request.send().await {
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {

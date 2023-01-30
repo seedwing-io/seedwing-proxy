@@ -22,11 +22,13 @@ impl Default for Decision {
 #[derive(Clone)]
 pub struct PolicyEngine {
     config: PolicyConfig,
+    pub client: awc::Client,
 }
 
 impl PolicyEngine {
     pub fn new(config: PolicyConfig) -> Self {
-        Self { config }
+        let client = awc::Client::default();
+        Self { config, client }
     }
 
     /// Query the policy server
@@ -40,8 +42,8 @@ impl PolicyEngine {
         &self,
         context: &Context,
     ) -> Result<Option<HttpResponse>, actix_web::Error> {
-        let client = awc::Client::default(); // TODO: better place for this?
-        match client
+        match self
+            .client
             .post(self.config.url().as_str())
             .send_json(context)
             .await

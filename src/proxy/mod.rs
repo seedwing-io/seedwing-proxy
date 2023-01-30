@@ -27,8 +27,6 @@ impl Proxy {
     pub async fn run(mut self) -> Result<(), std::io::Error> {
         let bind_args: (String, u16) = self.config.proxy().into();
 
-        let policy_engine: PolicyEngine = PolicyEngine::new(self.config.policy().clone());
-
         log::info!("========================================================================");
         log::info!("Policy server {}", self.config.policy().url());
         log::info!("------------------------------------------------------------------------");
@@ -85,9 +83,12 @@ impl Proxy {
         }
 
         let server = HttpServer::new(move || {
-            let mut app = App::new()
-                .wrap(Logger::default())
-                .app_data(web::Data::new(policy_engine.clone()));
+            let mut app =
+                App::new()
+                    .wrap(Logger::default())
+                    .app_data(web::Data::new(PolicyEngine::new(
+                        self.config.policy().clone(),
+                    )));
 
             for service in self.config.repositories().iter().map(|(scope, config)| {
                 match config.repository_type() {

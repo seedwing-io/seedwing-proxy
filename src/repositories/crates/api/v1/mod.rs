@@ -1,3 +1,4 @@
+use crate::policy::PolicyEngine;
 use crate::repositories::crates::CratesState;
 use crate::sigstore::search;
 use actix_web::dev::HttpServiceFactory;
@@ -8,6 +9,7 @@ use awc::http::header;
 async fn download(
     path: web::Path<(String, String)>,
     crates: web::Data<CratesState>,
+    policy: web::Data<PolicyEngine>,
 ) -> impl Responder {
     let (crate_name, version) = path.into_inner();
     log::info!("download {} {}", crate_name, version);
@@ -18,8 +20,12 @@ async fn download(
         if let Some(crate_version) = info.versions.iter().find(|e| e.num == version) {
             let link = &crate_version.dl_path;
 
-            let client = awc::Client::default();
-            if let Ok(mut upstream) = client.get(format!("https://crates.io/{link}")).send().await {
+            if let Ok(mut upstream) = policy
+                .client
+                .get(format!("https://crates.io/{link}"))
+                .send()
+                .await
+            {
                 if let Ok(payload) = upstream.body().limit(20_000_000).await {
                     let digest = sha256::digest(payload.as_ref());
                     let uuids = search(digest.clone()).await;
