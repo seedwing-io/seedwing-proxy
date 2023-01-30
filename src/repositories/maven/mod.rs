@@ -65,13 +65,14 @@ async fn proxy(
                     config.scope.to_owned(),
                 );
                 match policy.evaluate(&context).await {
-                    Ok(_) => {
+                    Ok(None) => {
                         let mut response = HttpResponseBuilder::new(upstream.status());
                         for header in upstream.headers().iter() {
                             response.insert_header(header);
                         }
                         response.body(payload)
                     }
+                    Ok(Some(response)) => response,
                     Err(e) => e.into(),
                 }
             }
