@@ -174,4 +174,55 @@ mod test {
 
         assert!(repo_iter.next().is_none())
     }
+
+    #[test]
+    fn proxy_default_deser() {
+        let config = toml::from_str::<Config>(
+            r#"
+            [proxy]
+            bind = "255.255.255.255"
+            [policy]
+            url = 'http://localhost:8080/'
+        "#,
+        );
+        assert!(!config.is_err());
+        let config = config.unwrap();
+        assert_eq!("255.255.255.255", config.proxy.bind());
+
+        let config = toml::from_str::<Config>(
+            r#"
+            [proxy]
+            port = 9999
+            [policy]
+            url = 'http://localhost:8080/'
+        "#,
+        );
+        assert!(!config.is_err());
+        let config = config.unwrap();
+        assert_eq!(9999, config.proxy.port());
+
+        let config = toml::from_str::<Config>(
+            r#"
+            [proxy]
+            cache_dir = '~/.test/cache_dir'
+            [policy]
+            url = 'http://localhost:8080/'
+        "#,
+        );
+        assert!(!config.is_err());
+        let config = config.unwrap();
+        assert_eq!("~/.test/cache_dir", config.proxy.cache_dir());
+
+        let config = toml::from_str::<Config>(
+            r#"
+            [proxy]
+            git_cmd = "mygitcmd"
+            [policy]
+            url = 'http://localhost:8080/'
+        "#,
+        );
+        assert!(!config.is_err());
+        let config = config.unwrap();
+        assert_eq!("mygitcmd", config.proxy.git_cmd());
+    }
 }
