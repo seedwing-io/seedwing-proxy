@@ -1,6 +1,8 @@
 
 pattern context = minimum
 
+pattern foo = minimum && require-invalid-sig
+
 pattern jim = minimum && signed-by-jim
 
 pattern minimum = {
@@ -21,6 +23,30 @@ pattern signed-by-jim = {
                                 extensions: list::Any<{
                                     subjectAlternativeName: list::Any<{
                                         rfc822: "jim@crossleys.org",
+                                    }>
+                                }>
+                            }> )
+                        )
+                    }
+                }
+            }
+        }>
+    )
+}
+
+pattern require-invalid-sig = {
+    hash: sigstore::SHA256(
+        list::Any<{
+            apiVersion: "0.0.1",
+            spec: {
+                signature: {
+                    publicKey: {
+                        content: base64::Base64(
+                            x509::PEM( list::Any<{
+                                version: 2,
+                                extensions: list::Any<{
+                                    subjectAlternativeName: list::Any<{
+                                        rfc822: "invalid@invalid.org",
                                     }>
                                 }>
                             }> )
