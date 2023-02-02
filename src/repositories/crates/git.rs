@@ -35,7 +35,7 @@ use tokio::{
 use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use url::Url;
 
-use super::CratesState;
+use super::CratesConfig;
 
 const CACHEDIR_TAG_FILE: &str = "CACHEDIR.TAG";
 const CACHEDIR_TAG_CONTENTS: &str = "Signature: 8a477f597d28d172789f06886806bc55
@@ -465,7 +465,7 @@ async fn read_line(child: &mut ChildStdout) -> Result<String, io::Error> {
 async fn handle_backend_service(
     req: HttpRequest,
     mut payload: web::Payload,
-    crates: web::Data<CratesState>,
+    crates: web::Data<CratesConfig>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let git_dir = crates
         .index_repository

@@ -1,5 +1,5 @@
 use crate::policy::PolicyEngine;
-use crate::repositories::crates::CratesState;
+use crate::repositories::crates::CratesConfig;
 use crate::sigstore::search;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::{get, web, HttpResponse, Responder};
@@ -8,7 +8,7 @@ use awc::http::header;
 #[get("/{version}/download")]
 async fn download(
     path: web::Path<(String, String)>,
-    crates: web::Data<CratesState>,
+    crates: web::Data<CratesConfig>,
     policy: web::Data<PolicyEngine>,
 ) -> impl Responder {
     let (crate_name, version) = path.into_inner();

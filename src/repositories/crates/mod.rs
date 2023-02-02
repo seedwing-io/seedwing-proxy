@@ -1,23 +1,22 @@
+use self::git::IndexRepository;
 use actix_web::{web, Scope};
 use crates_io_api::AsyncClient;
-
-use self::git::IndexRepository;
 
 pub mod api;
 
 pub mod git;
 
-pub struct CratesState {
+pub struct CratesConfig {
     client: AsyncClient,
     scope: String,
     index_repository: IndexRepository,
     git_cmd: String,
 }
 
-impl CratesState {
+impl CratesConfig {
     pub fn new(scope: &str, git_cmd: &str, index_repository: IndexRepository) -> Self {
         let client = AsyncClient::new(
-            "seedwing-io (bmcwhirt@redhat.com)",
+            "seedwing-io (seedwing@example.com)",
             std::time::Duration::from_millis(1000),
         )
         .expect("Unable to construct crates.io async client");
@@ -37,7 +36,7 @@ pub fn service(scope: &str, git_cmd: &str, index_repository: git::IndexRepositor
     let scope = format!("/{scope}");
     log::info!("Creating cargo service with scope {scope}");
     web::scope(&scope)
-        .app_data(web::Data::new(CratesState::new(
+        .app_data(web::Data::new(CratesConfig::new(
             &scope,
             git_cmd,
             index_repository,
