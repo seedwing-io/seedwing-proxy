@@ -53,6 +53,7 @@ impl Proxy {
                     self.get_cache_dir(&base_cache_dir, scope, &bind_args.0, bind_args.1),
                     self.get_url(scope, &bind_args.0, bind_args.1, Some("/api/v1/crates")),
                     self.get_url(scope, &bind_args.0, bind_args.1, None),
+                    config.periodic_update(),
                 );
                 log::info!(
                     "    Crate repository       : {}",
@@ -69,6 +70,10 @@ impl Proxy {
                 log::info!(
                     "    API URL                : {}",
                     index_repository.get_api_url()
+                );
+                log::info!(
+                    "    Periodic Update        : {}",
+                    index_repository.get_periodic_update()
                 );
                 if let Err(error) = index_repository.prepare_local_cache() {
                     log::info!("    Failed to initialize   : {error}");

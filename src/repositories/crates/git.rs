@@ -54,8 +54,6 @@ const TAG_NAME: &str = "seedwing";
 
 const GIT_HTTP_BACKEND: &str = "http-backend";
 
-const PEROIDIC_UPDATE: u64 = 3600;
-
 #[derive(Error, Debug)]
 pub enum GitError {
     Io {
@@ -83,15 +81,23 @@ pub struct IndexRepository {
     local_repository_cache: PathBuf,
     dl: Url,
     api: Url,
+    periodic_update: u64,
 }
 
 impl IndexRepository {
-    pub fn new(repo: Url, local_repository_cache: PathBuf, dl: Url, api: Url) -> IndexRepository {
+    pub fn new(
+        repo: Url,
+        local_repository_cache: PathBuf,
+        dl: Url,
+        api: Url,
+        periodic_update: u64,
+    ) -> IndexRepository {
         IndexRepository {
             repo,
             local_repository_cache,
             dl,
             api,
+            periodic_update,
         }
     }
 
@@ -109,6 +115,10 @@ impl IndexRepository {
 
     pub fn get_api_url(&self) -> &Url {
         &self.api
+    }
+
+    pub fn get_periodic_update(&self) -> u64 {
+        self.periodic_update
     }
 
     fn write_config(&self, config_json_file: &Path) -> io::Result<()> {
@@ -346,9 +356,9 @@ impl IndexRepository {
         Ok(())
     }
 
-    async fn periodic_update_of_cache(local_repository_cache: String) {
+    async fn periodic_update_of_cache(local_repository_cache: String, periodic_update: u64) {
         let path = PathBuf::from(local_repository_cache);
-        let mut interval = time::interval(time::Duration::from_secs(PEROIDIC_UPDATE));
+        let mut interval = time::interval(time::Duration::from_secs(periodic_update));
         loop {
             interval.tick().await;
             if let Err(error) = Self::update_local_cache(&path) {
@@ -417,7 +427,12 @@ impl IndexRepository {
         }
 
         let path = String::from(self.local_repository_cache.to_str().unwrap());
-        tokio::spawn(Self::periodic_update_of_cache(path));
+        if self.get_periodic_update() > 0 {
+            tokio::spawn(Self::periodic_update_of_cache(
+                path,
+                self.get_periodic_update(),
+            ));
+        }
         Ok(())
     }
 }
