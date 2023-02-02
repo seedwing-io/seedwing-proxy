@@ -9,6 +9,7 @@ default = "deny"
 [repositories.crates-io]
 type = "crates"
 url = "https://github.com/rust-lang/crates.io-index"
+periodic_update = 3600
 
 [repositories.m2]
 type = "m2"

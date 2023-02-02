@@ -38,6 +38,8 @@ pub struct RepositoryConfig {
     #[serde(rename = "type")]
     repository_type: RepositoryType,
     url: Url,
+    #[serde(default = "default_periodic_update")]
+    periodic_update: u64,
 }
 
 impl RepositoryConfig {
@@ -48,4 +50,12 @@ impl RepositoryConfig {
     pub fn url(&self) -> Url {
         self.url.clone()
     }
+
+    pub fn periodic_update(&self) -> u64 {
+        self.periodic_update
+    }
+}
+
+fn default_periodic_update() -> u64 {
+    0
 }
