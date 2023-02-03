@@ -5,9 +5,8 @@
 */
 
 use std::{
-    fmt::{Display, Formatter},
     fs::{self, File},
-    io::{self, ErrorKind, Write},
+    io::{self, Write},
     path::{Path, PathBuf},
     process::Stdio,
 };
@@ -23,7 +22,6 @@ use git2::{
     Repository, Signature,
 };
 use substring::Substring;
-use thiserror::Error;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt as _},
     time,
@@ -36,6 +34,7 @@ use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 use url::Url;
 
 use super::CratesConfig;
+use crate::errors::{Error, Result};
 
 const CACHEDIR_TAG_FILE: &str = "CACHEDIR.TAG";
 const CACHEDIR_TAG_CONTENTS: &str = "Signature: 8a477f597d28d172789f06886806bc55
@@ -53,27 +52,6 @@ const CONFIG_JSON_FILE: &str = "config.json";
 const TAG_NAME: &str = "seedwing";
 
 const GIT_HTTP_BACKEND: &str = "http-backend";
-
-#[derive(Error, Debug)]
-pub enum GitError {
-    Io {
-        #[from]
-        source: io::Error,
-    },
-    Git2 {
-        #[from]
-        source: git2::Error,
-    },
-    Other {
-        message: String,
-    },
-}
-
-impl Display for GitError {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), std::fmt::Error> {
-        f.write_str(format!("{:?}", *self).as_str())
-    }
-}
 
 #[derive(Clone)]
 pub struct IndexRepository {
@@ -132,17 +110,17 @@ impl IndexRepository {
         )
     }
 
-    fn get_seedwing_branch(seedwing_branch_file: &PathBuf) -> Result<String, GitError> {
+    fn get_seedwing_branch(seedwing_branch_file: &PathBuf) -> Result<String> {
         if let Ok(remote_branch_vec) = fs::read(seedwing_branch_file) {
             if let Ok(remote_branch) = String::from_utf8(remote_branch_vec) {
                 Ok(remote_branch)
             } else {
-                Err(GitError::Other {
+                Err(Error::Other {
                     message: String::from("Remote branch name is not valid UTF-8"),
                 })
             }
         } else {
-            Err(GitError::Other {
+            Err(Error::Other {
                 message: String::from(
                     "Failed to read remote branch name from seedwing configuration",
                 ),
@@ -162,7 +140,7 @@ impl IndexRepository {
         )
     }
 
-    fn fetch_repo(remote: &mut Remote, remote_branch: &String) -> Result<(), GitError> {
+    fn fetch_repo(remote: &mut Remote, remote_branch: &String) -> Result<()> {
         log::info!("Fetching remote branch: {}", remote_branch);
 
         let mut cb = RemoteCallbacks::new();
@@ -214,7 +192,7 @@ impl IndexRepository {
         repo: &Repository,
         remote_branch: &String,
         git_repository_dir: &Path,
-    ) -> Result<(), GitError> {
+    ) -> Result<()> {
         let seedwing_branch_file = git_repository_dir.join(SEEDWING_BRANCH_FILE);
         let gitignore_file = git_repository_dir.join(GITIGNORE_FILE);
         let config_json_file = git_repository_dir.join(CONFIG_JSON_FILE);
@@ -234,7 +212,7 @@ impl IndexRepository {
                 true,
             )?;
         } else {
-            return Err(GitError::Other {
+            return Err(Error::Other {
                 message: format!("Could not locate commit for {}", &remote_branch_spec),
             });
         }
@@ -272,7 +250,7 @@ impl IndexRepository {
         Ok(())
     }
 
-    pub fn update_local_cache(local_repository_cache: &PathBuf) -> Result<(), GitError> {
+    pub fn update_local_cache(local_repository_cache: &PathBuf) -> Result<()> {
         let cache_dir = Path::new(local_repository_cache);
         let cache_dir_tag = cache_dir.join(CACHEDIR_TAG_FILE);
         let git_repository_dir = cache_dir.join(GIT_DIR);
@@ -321,7 +299,7 @@ impl IndexRepository {
             if index.has_conflicts() {
                 index.remove_all([CONFIG_JSON_FILE].iter(), None)?;
                 if index.has_conflicts() {
-                    return Err(GitError::Other {
+                    return Err(Error::Other {
                         message: String::from("Could not resolve all conflicts"),
                     });
                 }
@@ -367,7 +345,7 @@ impl IndexRepository {
         }
     }
 
-    pub fn prepare_local_cache(&self) -> Result<(), GitError> {
+    pub fn prepare_local_cache(&self) -> Result<()> {
         let cache_dir = Path::new(&self.local_repository_cache);
         let cache_dir_tag = cache_dir.join(CACHEDIR_TAG_FILE);
         let git_repository_dir = cache_dir.join(GIT_DIR);
@@ -419,7 +397,7 @@ impl IndexRepository {
 
                     self.init_local_branch(&repo, &remote_branch, &git_repository_dir)?;
                 } else {
-                    return Err(GitError::Other {
+                    return Err(Error::Other {
                         message: String::from("Remote branch name is not valid UTF-8"),
                     });
                 }
@@ -437,7 +415,7 @@ impl IndexRepository {
     }
 }
 
-async fn read_line(child: &mut ChildStdout) -> Result<String, io::Error> {
+async fn read_line(child: &mut ChildStdout) -> Result<String> {
     let mut vec: Vec<u8> = Vec::new();
 
     // Need a better way of handling this
@@ -453,12 +431,12 @@ async fn read_line(child: &mut ChildStdout) -> Result<String, io::Error> {
                     vec.push(byte);
                 }
             }
-            Err(error) => return Err(error),
+            Err(error) => return Err(error.into()),
         }
     }
     match String::from_utf8(vec) {
         Ok(result) => Ok(result),
-        Err(error) => Err(io::Error::new(ErrorKind::Other, error)),
+        Err(error) => Err(error.into()),
     }
 }
 
@@ -466,7 +444,7 @@ async fn handle_backend_service(
     req: HttpRequest,
     mut payload: web::Payload,
     crates: web::Data<CratesConfig>,
-) -> Result<HttpResponse, actix_web::Error> {
+) -> Result<HttpResponse> {
     let git_dir = crates
         .index_repository
         .get_local_repository_cache()
@@ -521,7 +499,7 @@ async fn handle_backend_service(
         }
     }
 
-    let (tx, rx) = mpsc::channel::<Result<Bytes, io::Error>>(100);
+    let (tx, rx) = mpsc::channel::<Result<Bytes>>(100);
 
     actix_web::rt::spawn(async move {
         let mut buf: [u8; 8192] = [0; 8192];
