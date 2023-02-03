@@ -49,7 +49,7 @@ impl Proxy {
                 );
                 log::info!("Initialising Crate Repository for scope {scope}");
                 let index_repository = git::IndexRepository::new(
-                    config.url().clone(),
+                    config.url(),
                     self.get_cache_dir(&base_cache_dir, scope, &bind_args.0, bind_args.1),
                     self.get_url(scope, &bind_args.0, bind_args.1, Some("/api/v1/crates")),
                     self.get_url(scope, &bind_args.0, bind_args.1, None),
@@ -75,12 +75,8 @@ impl Proxy {
                     "    Periodic Update        : {}",
                     index_repository.get_periodic_update()
                 );
-                if let Err(error) = index_repository.prepare_local_cache() {
-                    log::info!("    Failed to initialize   : {error}");
-                } else {
-                    self.crate_repositories
-                        .insert(scope.to_string(), index_repository);
-                }
+                self.crate_repositories
+                    .insert(scope.to_string(), index_repository);
                 log::info!(
                     "------------------------------------------------------------------------"
                 );

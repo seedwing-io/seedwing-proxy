@@ -12,11 +12,16 @@ use std::{
 };
 
 use actix_web::{
-    body::BodyStream, dev::HttpServiceFactory, http::StatusCode, web, HttpMessage, HttpRequest,
-    HttpResponse,
+    body::BodyStream, dev::HttpServiceFactory, error::ErrorNotFound, http::StatusCode, web,
+    HttpMessage, HttpRequest, HttpResponse,
 };
 use bytes::Bytes;
 use fs2::FileExt;
+
+use futures::{
+    future::{BoxFuture, Shared},
+    FutureExt,
+};
 use git2::{
     build::CheckoutBuilder, Direction, FetchOptions, MergeOptions, Oid, Remote, RemoteCallbacks,
     Repository, Signature,
@@ -60,6 +65,7 @@ pub struct IndexRepository {
     dl: Url,
     api: Url,
     periodic_update: u64,
+    init_cache: Shared<BoxFuture<'static, bool>>,
 }
 
 impl IndexRepository {
@@ -69,13 +75,24 @@ impl IndexRepository {
         dl: Url,
         api: Url,
         periodic_update: u64,
-    ) -> IndexRepository {
-        IndexRepository {
+    ) -> Self {
+        let init_cache = Self::wrap_prepare(
+            local_repository_cache.clone(),
+            repo.clone(),
+            dl.clone(),
+            api.clone(),
+            periodic_update,
+        )
+        .boxed()
+        .shared();
+
+        Self {
             repo,
             local_repository_cache,
             dl,
             api,
             periodic_update,
+            init_cache,
         }
     }
 
@@ -99,14 +116,10 @@ impl IndexRepository {
         self.periodic_update
     }
 
-    fn write_config(&self, config_json_file: &Path) -> io::Result<()> {
+    fn write_config(config_json_file: &Path, dl_url: &Url, api_url: &Url) -> io::Result<()> {
         fs::write(
             config_json_file,
-            format!(
-                "{{\n  \"dl\": \"{}\",\n  \"api\": \"{}\"\n}}\n",
-                self.get_dl_url(),
-                self.get_api_url()
-            ),
+            format!("{{\n  \"dl\": \"{dl_url}\",\n  \"api\": \"{api_url}\"\n}}\n"),
         )
     }
 
@@ -187,11 +200,12 @@ impl IndexRepository {
         Ok(())
     }
 
-    pub fn init_local_branch(
-        &self,
+    fn init_local_branch(
         repo: &Repository,
         remote_branch: &String,
         git_repository_dir: &Path,
+        dl_url: &Url,
+        api_url: &Url,
     ) -> Result<()> {
         let seedwing_branch_file = git_repository_dir.join(SEEDWING_BRANCH_FILE);
         let gitignore_file = git_repository_dir.join(GITIGNORE_FILE);
@@ -225,7 +239,7 @@ impl IndexRepository {
         fs::create_dir_all(seedwing_branch_file.parent().unwrap())?;
         fs::write(&seedwing_branch_file, remote_branch)?;
 
-        self.write_config(&config_json_file)?;
+        Self::write_config(&config_json_file, dl_url, api_url)?;
 
         let mut index = repo.index()?;
         index.add_path(Path::new(CONFIG_JSON_FILE))?;
@@ -250,7 +264,7 @@ impl IndexRepository {
         Ok(())
     }
 
-    pub fn update_local_cache(local_repository_cache: &PathBuf) -> Result<()> {
+    fn update_local_cache(local_repository_cache: &PathBuf) -> Result<()> {
         let cache_dir = Path::new(local_repository_cache);
         let cache_dir_tag = cache_dir.join(CACHEDIR_TAG_FILE);
         let git_repository_dir = cache_dir.join(GIT_DIR);
@@ -345,8 +359,38 @@ impl IndexRepository {
         }
     }
 
-    pub fn prepare_local_cache(&self) -> Result<()> {
-        let cache_dir = Path::new(&self.local_repository_cache);
+    async fn wrap_prepare(
+        local_repository_cache: PathBuf,
+        repo_url: Url,
+        dl_url: Url,
+        api_url: Url,
+        periodic_update: u64,
+    ) -> bool {
+        let repo = repo_url.clone();
+        if let Err(error) = Self::prepare_local_cache(
+            local_repository_cache,
+            repo_url,
+            dl_url,
+            api_url,
+            periodic_update,
+        )
+        .await
+        {
+            log::error!("Failed to prepare the local cache for repository {repo}: {error}");
+            false
+        } else {
+            true
+        }
+    }
+
+    async fn prepare_local_cache(
+        local_repository_cache: PathBuf,
+        repo_url: Url,
+        dl_url: Url,
+        api_url: Url,
+        periodic_update: u64,
+    ) -> Result<()> {
+        let cache_dir = Path::new(&local_repository_cache);
         let cache_dir_tag = cache_dir.join(CACHEDIR_TAG_FILE);
         let git_repository_dir = cache_dir.join(GIT_DIR);
         let seedwing_branch_file = git_repository_dir.join(SEEDWING_BRANCH_FILE);
@@ -372,7 +416,7 @@ impl IndexRepository {
                 if let Ok(repo) = Repository::open(&git_repository_dir) {
                     if let Ok(remote) = repo.find_remote(REMOTE_NAME) {
                         if let Some(url) = remote.url() {
-                            is_repository_valid = url == self.get_repo().as_str();
+                            is_repository_valid = url == repo_url.as_str();
                         }
                     }
                 }
@@ -386,7 +430,7 @@ impl IndexRepository {
 
                 let repo = Repository::init(&git_repository_dir)?;
 
-                let mut remote = repo.remote(REMOTE_NAME, self.get_repo().as_str())?;
+                let mut remote = repo.remote(REMOTE_NAME, repo_url.as_str())?;
                 remote.connect(Direction::Fetch)?;
 
                 let remote_branch_buf = remote.default_branch()?;
@@ -395,7 +439,13 @@ impl IndexRepository {
 
                     Self::fetch_repo(&mut remote, &remote_branch)?;
 
-                    self.init_local_branch(&repo, &remote_branch, &git_repository_dir)?;
+                    Self::init_local_branch(
+                        &repo,
+                        &remote_branch,
+                        &git_repository_dir,
+                        &dl_url,
+                        &api_url,
+                    )?;
                 } else {
                     return Err(Error::Other {
                         message: String::from("Remote branch name is not valid UTF-8"),
@@ -404,14 +454,15 @@ impl IndexRepository {
             }
         }
 
-        let path = String::from(self.local_repository_cache.to_str().unwrap());
-        if self.get_periodic_update() > 0 {
-            tokio::spawn(Self::periodic_update_of_cache(
-                path,
-                self.get_periodic_update(),
-            ));
+        let path = String::from(local_repository_cache.to_str().unwrap());
+        if periodic_update > 0 {
+            tokio::spawn(Self::periodic_update_of_cache(path, periodic_update));
         }
         Ok(())
+    }
+
+    async fn init_cache(&self) -> bool {
+        self.init_cache.clone().await
     }
 }
 
@@ -445,6 +496,10 @@ async fn handle_backend_service(
     mut payload: web::Payload,
     crates: web::Data<CratesConfig>,
 ) -> Result<HttpResponse> {
+    if !crates.index_repository.init_cache().await {
+        return Err(ErrorNotFound("Failed to initialise local cache").into());
+    }
+
     let git_dir = crates
         .index_repository
         .get_local_repository_cache()
