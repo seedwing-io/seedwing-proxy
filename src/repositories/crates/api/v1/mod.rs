@@ -1,50 +1,68 @@
-use crate::policy::PolicyEngine;
+use crate::errors::Result;
+use crate::policy::{
+    context::{ArtifactIdentifier, Context},
+    PolicyEngine,
+};
 use crate::repositories::crates::CratesConfig;
-use crate::sigstore::search;
 use actix_web::dev::HttpServiceFactory;
-use actix_web::{get, web, HttpResponse, Responder};
-use awc::http::header;
+use actix_web::{get, web, HttpResponse, HttpResponseBuilder, Responder};
 
 #[get("/{version}/download")]
 async fn download(
     path: web::Path<(String, String)>,
     crates: web::Data<CratesConfig>,
     policy: web::Data<PolicyEngine>,
-) -> impl Responder {
+) -> Result<impl Responder> {
     let (crate_name, version) = path.into_inner();
     log::info!("download {} {}", crate_name, version);
 
     let client = &crates.client;
+    let info = client.get_crate(&crate_name).await?;
 
-    if let Ok(info) = client.get_crate(&crate_name).await {
-        if let Some(crate_version) = info.versions.iter().find(|e| e.num == version) {
+    match info.versions.iter().find(|e| e.num == version) {
+        None => {
+            let msg = format!(
+                "Error encountered finding version {version} of crate {crate_name} in crate info"
+            );
+            log::error!("{msg}");
+            Ok(HttpResponse::NotFound().body("{msg}"))
+        }
+        Some(crate_version) => {
             let link = &crate_version.dl_path;
+            let url = format!("https://crates.io/{link}");
 
-            if let Ok(mut upstream) = policy
-                .client
-                .get(format!("https://crates.io/{link}"))
-                .send()
-                .await
-            {
-                if let Ok(payload) = upstream.body().limit(20_000_000).await {
-                    let digest = sha256::digest(payload.as_ref());
-                    let uuids = search(digest.clone()).await;
-                    println!("{crate_name} {version} = {digest} {uuids:?}");
+            let mut upstream = policy.client.get(url.clone()).send().await?;
+            let payload = upstream.body().limit(20_000_000).await?;
 
-                    let mut response = HttpResponse::Ok();
-                    if let Some(v) = upstream.headers().get(header::CONTENT_TYPE) {
-                        response.append_header((header::CONTENT_TYPE, v));
+            let id = ArtifactIdentifier::Crate {
+                name: crate_name.clone(),
+            };
+            let context = Context::new(
+                url,
+                sha256::digest(payload.as_ref()), // todo: double check this
+                id,
+                crates.scope.to_owned(),
+            );
+
+            match policy.evaluate(&context).await? {
+                None => {
+                    log::info!("Policy evaluation success");
+                    let mut response = HttpResponseBuilder::new(upstream.status());
+                    for header in upstream.headers().iter() {
+                        response.insert_header(header);
                     }
-                    let disposition =
-                        format!("attachment; filename=\"{crate_name}-{version}.crate\"");
-                    response.append_header((header::CONTENT_DISPOSITION, disposition));
-                    return response.body(payload);
+                    Ok(response.body(payload))
+                }
+                Some(err_response) => {
+                    log::info!(
+                        "Policy evaluation returned failure: {}",
+                        err_response.status()
+                    );
+                    Ok(err_response)
                 }
             }
         }
     }
-
-    HttpResponse::NotFound().body("not found")
 }
 
 pub fn service() -> impl HttpServiceFactory {
