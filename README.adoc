@@ -15,6 +15,22 @@ they match a given policy.
 
 === Cargo
 
+The seedwing proxy includes support for both git based registries and those accessible via the newer sparse protocol.
+
+If your cargo installation supports the newer sparse protocol use the following cargo configuration
+
+In `.cargo/config`:
+
+```
+[source.seedwing]
+registry = "sparse+http://localhost:8181/sparse-crates-io/index/"
+
+[source.crates-io]
+replace-with = "seedwing"
+```
+
+To use the git based index protocol use the following cargo configuration
+
 In `.cargo/config`:
 
 ```
@@ -23,7 +39,6 @@ registry = "http://localhost:8181/crates-io/"
 
 [source.crates-io]
 replace-with = "seedwing"
-
 ```
 
 ===  Maven

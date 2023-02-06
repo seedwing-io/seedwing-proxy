@@ -3,14 +3,14 @@ use crate::policy::{
     context::{ArtifactIdentifier, Context},
     PolicyEngine,
 };
-use crate::repositories::crates::CratesConfig;
+use crate::repositories::crates::CratesDownloadConfig;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::{get, web, HttpResponse, HttpResponseBuilder, Responder};
 
 #[get("/{version}/download")]
 async fn download(
     path: web::Path<(String, String)>,
-    crates: web::Data<CratesConfig>,
+    crates: web::Data<CratesDownloadConfig>,
     policy: web::Data<PolicyEngine>,
 ) -> Result<impl Responder> {
     let (crate_name, version) = path.into_inner();
