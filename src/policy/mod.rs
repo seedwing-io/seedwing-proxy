@@ -7,15 +7,17 @@ pub mod context;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Decision {
-    #[serde(rename = "allow")]
-    Allow,
-    #[serde(rename = "deny")]
-    Deny,
+    #[serde(rename = "disable")]
+    Disable,
+    #[serde(rename = "warn")]
+    Warn,
+    #[serde(rename = "enforce")]
+    Enforce,
 }
 
 impl Default for Decision {
     fn default() -> Self {
-        Self::Deny
+        Self::Disable
     }
 }
 
@@ -42,6 +44,10 @@ impl PolicyEngine {
         &self,
         context: &Context,
     ) -> Result<Option<HttpResponse>, actix_web::Error> {
+        if let Decision::Disable = self.config.decision() {
+            // short-circuit if policy checking is disabled
+            return Ok(None);
+        }
         match self
             .client
             .post(self.config.url().as_str())
@@ -60,20 +66,24 @@ impl PolicyEngine {
                                 response.status(),
                                 reason,
                             );
-                            let mut result = HttpResponseBuilder::new(response.status());
-                            for header in response.headers().iter() {
-                                result.insert_header(header);
+                            if let Decision::Enforce = self.config.decision() {
+                                let mut result = HttpResponseBuilder::new(response.status());
+                                for header in response.headers().iter() {
+                                    result.insert_header(header);
+                                }
+                                Ok(Some(result.body(payload)))
+                            } else {
+                                Ok(None)
                             }
-                            Ok(Some(result.body(payload)))
                         }
                         Err(e) => Err(actix_web::Error::from(e)),
                     }
                 }
             }
-            Err(e) => match self.config.default_decision() {
-                Decision::Allow => Ok(None),
-                Decision::Deny => Err(ErrorInternalServerError(e)),
-            },
+            Err(e) => {
+                log::warn!("Unable to query policy server: {e}");
+                Err(ErrorInternalServerError(e))
+            }
         }
     }
 }
