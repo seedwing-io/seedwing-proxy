@@ -4,14 +4,14 @@ use url::Url;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PolicyConfig {
-    #[serde(rename = "default", default)]
-    default_decision: Decision,
+    #[serde(default)]
+    decision: Decision,
     url: Url,
 }
 
 impl PolicyConfig {
-    pub fn default_decision(&self) -> Decision {
-        self.default_decision
+    pub fn decision(&self) -> Decision {
+        self.decision
     }
 
     pub fn url(&self) -> Url {

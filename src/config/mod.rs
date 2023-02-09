@@ -108,16 +108,16 @@ mod test {
             Url::parse("http://localhost:8080/").unwrap(),
             config.policy.url()
         );
-        assert_eq!(Decision::Deny, config.policy.default_decision());
+        assert_eq!(Decision::Disable, config.policy.decision());
     }
 
     #[test]
-    fn basic_config_default_allow() {
+    fn basic_config_default_warn() {
         let config: Config = toml::from_str(
             r#"
             [policy]
             url = 'http://localhost:8080/'
-            default = "allow"
+            decision = "warn"
         "#,
         )
         .unwrap();
@@ -128,7 +128,7 @@ mod test {
             Url::parse("http://localhost:8080/").unwrap(),
             config.policy.url()
         );
-        assert_eq!(Decision::Allow, config.policy.default_decision());
+        assert_eq!(Decision::Warn, config.policy.decision());
     }
 
     #[test]
@@ -143,7 +143,7 @@ mod test {
 
             [policy]
             url = 'http://localhost:8080/'
-            enforce = false
+            decision = "enforce"
 
             [repositories.crates-io]
             type = "crates"
@@ -160,7 +160,7 @@ mod test {
             Url::parse("http://localhost:8080/").unwrap(),
             config.policy.url()
         );
-        assert_eq!(Decision::Deny, config.policy.default_decision());
+        assert_eq!(Decision::Enforce, config.policy.decision());
 
         let mut repo_iter = config.repositories.iter();
 
