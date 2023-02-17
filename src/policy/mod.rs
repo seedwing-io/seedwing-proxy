@@ -51,6 +51,7 @@ impl PolicyEngine {
         match self
             .client
             .post(self.config.url().as_str())
+            .insert_header(("Accept", "application/json"))
             .send_json(context)
             .await
         {
