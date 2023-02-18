@@ -3,7 +3,7 @@ bind = "0.0.0.0"
 port = 8181
 
 [policy]
-url = 'http://localhost:8080/policy/proxy/context'
+url = 'http://localhost:8080/policy/proxy/context?collapse=true'
 decision = "disable"            # disable | warn | enforce
 
 [repositories.crates-io]
