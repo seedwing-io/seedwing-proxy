@@ -30,13 +30,13 @@ jobs:
   upload-assets:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-22.04, macos-12, windows-2022]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             suffix: "linux-amd64"
-          - os: macos-latest
+          - os: macos-12
             suffix: "macos-amd64"
-          - os: windows-latest
+          - os: windows-2022
             suffix: "windows-amd64"
     runs-on: ${{ matrix.os }}
     steps:

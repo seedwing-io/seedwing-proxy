@@ -64,7 +64,11 @@ impl ProxyConfig {
             cache_dir = stripped
         }
         if tilde {
-            PathBuf::from(format!("{}/{}", env!("HOME"), cache_dir))
+            PathBuf::from(format!(
+                "{}/{}",
+                home::home_dir().unwrap().display(),
+                cache_dir
+            ))
         } else {
             PathBuf::from(cache_dir)
         }
