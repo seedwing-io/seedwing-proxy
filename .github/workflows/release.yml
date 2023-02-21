@@ -36,7 +36,7 @@ jobs:
             suffix: "linux-amd64"
           - os: macos-latest
             suffix: "macos-amd64"
-          - windows-latest
+          - os: windows-latest
             suffix: "windows-amd64"
     runs-on: ${{ matrix.os }}
     steps:
