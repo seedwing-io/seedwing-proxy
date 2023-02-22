@@ -38,6 +38,7 @@ async fn download(
                 name: crate_name.clone(),
             };
             let context = Context::new(
+                format!("pkg:cargo/{crate_name}@{version}"),
                 url,
                 sha256::digest(payload.as_ref()), // todo: double check this
                 id,

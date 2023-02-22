@@ -2,6 +2,7 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct Context {
+    purl: String,
     url: String,
     hash: String,
     id: ArtifactIdentifier,
@@ -11,6 +12,7 @@ pub struct Context {
 
 impl Context {
     pub fn new(
+        purl: String,
         url: String,
         hash: String,
         id: ArtifactIdentifier,
@@ -18,6 +20,7 @@ impl Context {
     ) -> Context {
         let license = None; // TODO: something
         Context {
+            purl,
             url,
             hash,
             id,
@@ -46,6 +49,7 @@ mod test {
     #[test]
     fn basic_context_serialization() {
         let context = Context {
+            purl: "pkg:cargo/crate@0.1.0".into(),
             url: "http://crates.io/not/a/real/crate.crate".into(),
             hash: "8675309".into(),
             id: ArtifactIdentifier::Crate {
