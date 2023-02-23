@@ -53,7 +53,7 @@ async fn proxy(
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {
                 let context = Context::new(
-                    format!("pkg:maven/{group}/{artifact}@{version}"),
+                    format!("pkg:maven/{}/{artifact}@{version}", group.replace('/', ".")),
                     uri,
                     sha256::digest(payload.as_ref()),
                     ArtifactIdentifier::M2 {
