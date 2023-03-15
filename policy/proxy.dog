@@ -2,7 +2,7 @@
 pattern context = not-affected
 
 pattern not-affected = {
-  purl: uri::purl | osv::from-purl | openvex::from-osv | openvex::not-affected
+  purl: uri::purl | osv::scan-purl | openvex::from-osv | openvex::not-affected
 }
 
 
