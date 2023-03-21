@@ -9,25 +9,17 @@ on:
       - v[0-9]+.*
 
 jobs:
-  changelog:
+  create-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Install convco
         run: |
           curl -sLO https://github.com/convco/convco/releases/download/v0.3.15/convco-ubuntu.zip
-          unzip convco-ubuntu.zip
-          chmod a+x convco
-          sudo mv convco /usr/local/bin
+          unzip convco-ubuntu.zip && chmod a+x convco
       - name: Generate changelog
         run: |
-          convco changelog -s --max-majors=1 --max-minors=1 --max-patches=1 > /tmp/changelog.md
-
-  create-release:
-    needs: changelog
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+          ./convco changelog -s --max-majors=1 --max-minors=1 --max-patches=1 > /tmp/changelog.md
       - uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: /tmp/changelog.md
