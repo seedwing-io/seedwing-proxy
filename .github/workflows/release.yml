@@ -22,6 +22,7 @@ jobs:
           ./convco changelog -s --max-majors=1 --max-minors=1 --max-patches=1 > /tmp/changelog.md
       - uses: taiki-e/create-gh-release-action@v1
         with:
+          prefix: v
           changelog: /tmp/changelog.md
           token: ${{ secrets.GITHUB_TOKEN }}
 
