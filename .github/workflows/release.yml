@@ -22,15 +22,10 @@ jobs:
       - name: Generate changelog
         run: |
           ./convco changelog -s --max-majors=1 --max-minors=1 --max-patches=1 > /tmp/changelog.md
-          cat /tmp/changelog.md
-      - id: jc
-        uses: taiki-e/create-gh-release-action@v1
+      - uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: /tmp/changelog.md
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: debug
-        run: |
-          echo "prefix=${{ steps.jc.outputs.computed-prefix }} version=${{ steps.jc.outputs.version }}"
 
   upload-assets:
     strategy:
