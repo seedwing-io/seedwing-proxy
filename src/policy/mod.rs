@@ -48,6 +48,10 @@ impl PolicyEngine {
             // short-circuit if policy checking is disabled
             return Ok(None);
         }
+        if !context.url().ends_with(".jar") {
+            // short-circuit for any resource other than a jar file
+            return Ok(None);
+        }
         match self
             .client
             .post(self.config.url().as_str())
@@ -63,7 +67,8 @@ impl PolicyEngine {
                         Ok(payload) => {
                             let reason = String::from_utf8(payload.to_vec()).unwrap();
                             log::warn!(
-                                "Access Denied!\n status: {}\n reason: {}",
+                                "Access Denied!\ncontext: {}\n status: {}\n response: {}",
+                                serde_json::to_string_pretty(&context).unwrap(),
                                 response.status(),
                                 reason,
                             );

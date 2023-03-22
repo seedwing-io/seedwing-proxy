@@ -28,6 +28,10 @@ impl Context {
             repository_id,
         }
     }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
 }
 
 #[derive(Serialize)]
