@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Install convco
         run: |
           curl -sLO https://github.com/convco/convco/releases/download/v0.3.15/convco-ubuntu.zip
@@ -26,8 +28,9 @@ jobs:
         with:
           changelog: /tmp/changelog.md
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          echo "prefix=${steps.jc.outputs.computed-prefix} version=${steps.jc.outputs.version}"
+      - name: debug
+        run: |
+          echo "prefix=${{ steps.jc.outputs.computed-prefix }} version=${{ steps.jc.outputs.version }}"
 
   upload-assets:
     strategy:
