@@ -11,20 +11,17 @@ pub mod git;
 pub mod sparse;
 
 pub struct CratesDownloadConfig {
-    scope: String,
     client: AsyncClient,
 }
 
-impl CratesDownloadConfig {
-    pub fn new(scope: &str) -> Self {
-        let scope = String::from(scope);
+impl Default for CratesDownloadConfig {
+    fn default() -> Self {
         let client = AsyncClient::new(
             "seedwing-io (seedwing@example.com)",
             std::time::Duration::from_millis(1000),
         )
         .expect("Unable to construct crates.io async client");
-
-        Self { scope, client }
+        Self { client }
     }
 }
 
@@ -73,7 +70,7 @@ pub fn service(
     let scope = format!("/{scope}");
     log::info!("Creating cargo service with scope {scope}");
     web::scope(&scope)
-        .app_data(web::Data::new(CratesDownloadConfig::new(&scope)))
+        .app_data(web::Data::new(CratesDownloadConfig::default()))
         .app_data(web::Data::new(CratesConfig::new(
             &scope,
             git_cmd,
@@ -93,7 +90,7 @@ pub fn service_sparse(
     let scope = format!("/{scope}");
     log::info!("Creating cargo sparse service with scope {scope}");
     web::scope(&scope)
-        .app_data(web::Data::new(CratesDownloadConfig::new(&scope)))
+        .app_data(web::Data::new(CratesDownloadConfig::default()))
         .app_data(web::Data::new(CratesSparseConfig::new(
             &scope,
             sparse_repository,

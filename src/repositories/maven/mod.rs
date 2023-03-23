@@ -1,36 +1,29 @@
-use crate::policy::{
-    context::{ArtifactIdentifier, Context},
-    PolicyEngine,
-};
+use crate::policy::{context::Context, PolicyEngine};
 use actix_web::{
     route, web, Error, HttpRequest, HttpResponse, HttpResponseBuilder, Responder, Scope,
 };
 use url::Url;
+use urlencoding::encode;
 
 pub struct MavenConfig {
     url: Url,
-    scope: String,
 }
 
 impl Default for MavenConfig {
     fn default() -> Self {
-        Self::new(
-            "https://repo.maven.apache.org/maven2".try_into().unwrap(),
-            "/m2",
-        )
+        Self::new("https://repo.maven.apache.org/maven2".try_into().unwrap())
     }
 }
 
 impl MavenConfig {
-    pub fn new(url: Url, scope: &str) -> Self {
-        let scope = scope.to_string();
-        Self { url, scope }
+    pub fn new(url: Url) -> Self {
+        Self { url }
     }
 }
 
 pub fn service(scope: &str, url: Url) -> Scope {
     web::scope(scope)
-        .app_data(web::Data::new(MavenConfig::new(url, scope)))
+        .app_data(web::Data::new(MavenConfig::new(url)))
         .service(proxy)
 }
 
@@ -53,14 +46,14 @@ async fn proxy(
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {
                 let context = Context::new(
-                    format!("pkg:maven/{}/{artifact}@{version}", group.replace('/', ".")),
+                    format!(
+                        "pkg:maven/{}/{artifact}@{version}?type={}&repository_url={}",
+                        group.replace('/', "."),
+                        file.rsplit_once('.').unwrap_or(("", "unknown")).1,
+                        encode(config.url.as_str())
+                    ),
                     uri,
                     sha256::digest(payload.as_ref()),
-                    ArtifactIdentifier::M2 {
-                        group_id: group,
-                        artifact_id: artifact,
-                    },
-                    config.scope.to_owned(),
                 );
                 match policy.evaluate(&context).await {
                     Ok(None) => {

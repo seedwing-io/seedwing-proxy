@@ -1,8 +1,5 @@
 use crate::errors::Result;
-use crate::policy::{
-    context::{ArtifactIdentifier, Context},
-    PolicyEngine,
-};
+use crate::policy::{context::Context, PolicyEngine};
 use crate::repositories::crates::CratesDownloadConfig;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::{get, web, HttpResponse, HttpResponseBuilder, Responder};
@@ -34,15 +31,10 @@ async fn download(
             let mut upstream = policy.client.get(url.clone()).send().await?;
             let payload = upstream.body().limit(20_000_000).await?;
 
-            let id = ArtifactIdentifier::Crate {
-                name: crate_name.clone(),
-            };
             let context = Context::new(
                 format!("pkg:cargo/{crate_name}@{version}"),
                 url,
                 sha256::digest(payload.as_ref()), // todo: double check this
-                id,
-                crates.scope.to_owned(),
             );
 
             match policy.evaluate(&context).await? {

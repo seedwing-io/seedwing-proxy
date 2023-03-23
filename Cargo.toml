@@ -21,7 +21,7 @@ log = "0.4.17"
 env_logger = "0.9.1"
 home = "0.5.4"
 handlebars = "4.3.4"
-
+urlencoding = "2.1.2"
 fs2 = "0.4.3"
 git2 = "0.16.1"
 thiserror = "1.0.38"
