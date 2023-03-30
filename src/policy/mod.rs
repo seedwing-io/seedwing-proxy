@@ -67,8 +67,7 @@ impl PolicyEngine {
                         Ok(payload) => {
                             let reason = String::from_utf8(payload.to_vec()).unwrap();
                             log::warn!(
-                                "Access Denied!\ncontext: {}\n status: {}\n response: {}",
-                                serde_json::to_string_pretty(&context).unwrap(),
+                                "Access Denied!\n status: {}\n response: {}",
                                 response.status(),
                                 reason,
                             );
