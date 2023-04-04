@@ -55,7 +55,7 @@ async fn proxy(
                     uri,
                     sha256::digest(payload.as_ref()),
                 );
-                match policy.evaluate(&context).await {
+                match policy.evaluate(&context, Some("jar")).await {
                     Ok(None) => {
                         let mut response = HttpResponseBuilder::new(upstream.status());
                         for header in upstream.headers().iter() {

@@ -43,14 +43,17 @@ impl PolicyEngine {
     pub async fn evaluate(
         &self,
         context: &Context,
+        extension: Option<&str>,
     ) -> Result<Option<HttpResponse>, actix_web::Error> {
         if let Decision::Disable = self.config.decision() {
             // short-circuit if policy checking is disabled
             return Ok(None);
         }
-        if !context.url().ends_with(".jar") {
-            // short-circuit for any resource other than a jar file
-            return Ok(None);
+        if let Some(ext) = extension {
+            if !context.url().ends_with(&format!(".{ext}")) {
+                // short-circuit for any resource without required extension
+                return Ok(None);
+            }
         }
         match self
             .client

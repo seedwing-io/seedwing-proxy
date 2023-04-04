@@ -20,6 +20,8 @@ pub enum RepositoryType {
     M2,
     #[serde(rename = "sparse-crates")]
     SparseCrates,
+    #[serde(rename = "npm")]
+    Npm,
 }
 
 impl Display for RepositoryType {
@@ -33,6 +35,9 @@ impl Display for RepositoryType {
             }
             RepositoryType::SparseCrates => {
                 write!(f, "sparse-crates")
+            }
+            RepositoryType::Npm => {
+                write!(f, "npm")
             }
         }
     }

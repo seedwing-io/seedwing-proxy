@@ -61,19 +61,21 @@ In `settings.xml`:
 
 ```
 
-To see it work, you can sign a few jars from Maven Central using Sigstore's `cosign` tool like so:
+=== npm
+
+
+For `npm`, you first need to set the default npm registry with the URL of the proxy:
 
 ```
-  $ curl -o foo.jar https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-compiler-plugin/3.8.0/maven-compiler-plugin-3.8.0.jar
-  $ COSIGN_EXPERIMENTAL=1 cosign sign-blob foo.jar
-
+npm config set registry http://0.0.0.0:8181/npm
 ```
 
-That'll output an index which you can then view here: https://rekor.tlog.dev/?logIndex=11656166
-
-The `spec/data/hash/value` should match the output of this:
+To force your dependencies to be downloaded through the proxy, you
+should remove your project's copies and clear the cache prior to
+installing them:
 
 ```
-  $ sha256sum foo.jar | cut -d' ' -f 1
-
+rm -rf node_modules/
+npm cache clean --force
+npm install
 ```

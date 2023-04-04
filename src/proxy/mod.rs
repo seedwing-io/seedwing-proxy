@@ -127,7 +127,7 @@ impl Proxy {
                         "------------------------------------------------------------------------"
                     );
                 }
-                RepositoryType::M2 => {}
+                RepositoryType::M2 | RepositoryType::Npm => {}
             }
         }
 
@@ -161,6 +161,7 @@ impl Proxy {
                             API_PATH,
                         )
                     }
+                    RepositoryType::Npm => repositories::npm::service(scope, config.url()),
                 }
             }) {
                 app = app.service(service)
