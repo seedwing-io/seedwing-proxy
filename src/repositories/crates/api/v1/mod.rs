@@ -37,7 +37,7 @@ async fn download(
                 sha256::digest(payload.as_ref()), // todo: double check this
             );
 
-            match policy.evaluate(&context).await? {
+            match policy.evaluate(&context, None).await? {
                 None => {
                     log::info!("Policy evaluation success");
                     let mut response = HttpResponseBuilder::new(upstream.status());

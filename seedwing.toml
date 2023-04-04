@@ -18,3 +18,7 @@ url = "https://index.crates.io"
 [repositories.m2]
 type = "m2"
 url = "https://repo.maven.apache.org/maven2"
+
+[repositories.npm]
+type = "npm"
+url = "https://registry.npmjs.org"
