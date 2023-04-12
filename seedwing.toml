@@ -22,3 +22,7 @@ url = "https://repo.maven.apache.org/maven2"
 [repositories.npm]
 type = "npm"
 url = "https://registry.npmjs.org"
+
+[repositories.gems]
+type = "gems"
+url = "https://rubygems.org"
