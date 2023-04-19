@@ -79,7 +79,7 @@ async fn pass_through(
 ) -> impl Responder {
     let path = path.into_inner();
     let uri = format!("{}{path}", config.url,);
-    log::info!("pass: {uri}");
+    log::debug!("pass: {uri}");
     let request = policy.client.request_from(uri, req.head());
     match request.send_stream(payload).await {
         Ok(upstream) => {

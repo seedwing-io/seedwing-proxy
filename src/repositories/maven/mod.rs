@@ -42,6 +42,7 @@ async fn proxy(
     let uri = format!("{}/{}/{}/{}/{}", config.url, group, artifact, version, file);
     log::debug!("upstream -> {uri}");
     let request = policy.client.request_from(&uri, req.head());
+    log::debug!("request: {request:?}");
     match request.send().await {
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {

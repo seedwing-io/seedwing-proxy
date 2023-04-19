@@ -36,8 +36,10 @@ async fn pass_through(
 ) -> impl Responder {
     let path = path.into_inner();
     let uri = format!("{}{path}", config.url,);
-    log::info!("pass: {uri} from: {req:?}");
-    let request = policy.client.request_from(&uri, req.head());
+    log::debug!("pass: {uri}");
+    let mut request = policy.client.request_from(&uri, req.head());
+    request.headers_mut().remove("keep-alive");
+    log::debug!("request: {request:?}");
     match request.send().await {
         Ok(mut upstream) => match upstream.body().limit(20_000_000).await {
             Ok(payload) => {
