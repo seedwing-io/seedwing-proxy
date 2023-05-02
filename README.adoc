@@ -79,3 +79,26 @@ rm -rf node_modules/
 npm cache clean --force
 npm install
 ```
+
+=== bundler
+
+
+For `bundler`, you must link the rubygems registry with the URL of the proxy:
+
+```
+bundle config set --global mirror.https://rubygems.org https://localhost:8181/gems
+```
+
+To force your gems to be downloaded through the proxy, you should
+clear the cache prior to installing them:
+
+```
+bundle clean --force
+bundle install
+```
+
+To remove the configuration:
+
+```
+bundle config unset --global mirror.https://rubygems.org
+```
