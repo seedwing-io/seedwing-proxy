@@ -103,3 +103,17 @@ To remove the configuration:
 bundle config unset --global mirror.https://rubygems.org
 ```
 
+=== python (pip)
+
+Set the `index-url` config parameter, either on the command line:
+
+```
+python3 -m pip install --index-url http://localhost:8181/pip SomeProject
+```
+
+Or in a config file, say `~/.config/pip/pip.conf`
+
+```
+[global]
+index-url = http://localhost:8181/pip
+```

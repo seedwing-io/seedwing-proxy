@@ -127,7 +127,10 @@ impl Proxy {
                         "------------------------------------------------------------------------"
                     );
                 }
-                RepositoryType::M2 | RepositoryType::Npm | RepositoryType::Gems => {}
+                RepositoryType::M2
+                | RepositoryType::Npm
+                | RepositoryType::Gems
+                | RepositoryType::Pip => {}
             }
         }
 
@@ -163,6 +166,7 @@ impl Proxy {
                     }
                     RepositoryType::Npm => repositories::npm::service(scope, config.url()),
                     RepositoryType::Gems => repositories::gems::service(scope, config.url()),
+                    RepositoryType::Pip => repositories::pip::service(scope, config.url()),
                 }
             }) {
                 app = app.service(service)

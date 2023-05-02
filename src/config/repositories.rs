@@ -24,6 +24,8 @@ pub enum RepositoryType {
     Npm,
     #[serde(rename = "gems")]
     Gems,
+    #[serde(rename = "pip")]
+    Pip,
 }
 
 impl Display for RepositoryType {
@@ -43,6 +45,9 @@ impl Display for RepositoryType {
             }
             RepositoryType::Gems => {
                 write!(f, "gems")
+            }
+            RepositoryType::Pip => {
+                write!(f, "pip")
             }
         }
     }
