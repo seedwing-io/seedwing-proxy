@@ -24,8 +24,21 @@ impl GemsConfig {
 pub fn service(scope: &str, url: Url) -> Scope {
     web::scope(scope)
         .app_data(web::Data::new(GemsConfig::new(url)))
+        // .service(proxy)
         .service(pass_through)
 }
+
+// #[route("{any:.*}", method = "GET", method = "HEAD")]
+// async fn proxy(
+//     req: HttpRequest,
+//     config: web::Data<GemsConfig>,
+//     policy: web::Data<PolicyEngine>,
+//     path: web::Path<String>,
+// ) -> impl Responder {
+
+// TODO: Actually query the proxy service once we can get all resources to pass through successfully
+
+// }
 
 #[route("{any:.*}", method = "GET", method = "HEAD")]
 async fn pass_through(
