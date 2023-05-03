@@ -55,6 +55,7 @@ impl PolicyEngine {
                 return Ok(None);
             }
         }
+        log::debug!("purl: {}", context.purl());
         match self
             .client
             .post(self.config.url().as_str())

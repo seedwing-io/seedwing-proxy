@@ -15,6 +15,10 @@ impl Context {
     pub fn url(&self) -> &str {
         &self.url
     }
+
+    pub fn purl(&self) -> &str {
+        &self.purl
+    }
 }
 
 #[cfg(test)]
