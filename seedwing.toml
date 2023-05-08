@@ -26,3 +26,7 @@ url = "https://registry.npmjs.org"
 [repositories.gems]
 type = "gems"
 url = "https://rubygems.org"
+
+[repositories.pip]
+type = "pip"
+url = "https://pypi.org/simple/"
